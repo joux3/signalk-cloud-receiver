@@ -9,27 +9,36 @@ const port = process.env.PORT || 3005;
 app.ws('/signalk-input', (ws) => {
   ws.on('message', msg => {
     if (ws.__boatId) {
-      console.log('got message from ' + ws.__boatId + ':', msg);
       handleBoatMessage(ws.__boatId, ws, msg);
     } else {
-      ws.__boatId = msg;
+      ws.__boatId = msg + Math.random();
       // TODO validate boat id against config
-      console.log('boat ' + ws.__boatId + ' connected');
+      doLog('boat ' + ws.__boatId + ' connected');
     }
   });
 
   ws.on('close', () => {
-    console.log('Boat ' + (ws.__boatId || '<unknown>') + ' disconnected');
+    doLog('Boat ' + (ws.__boatId || '<unknown>') + ' disconnected');
+  })
+
+  ws.on('error', () => {
+    doLog('Boat ' + (ws.__boatId || '<unknown>') + ' error');
   })
 });
 
 app.listen(port);
+console.log("Started listening at", port)
 
 function handleBoatMessage(boatId, ws, msg) {
   var parsed = tryParseJSON(msg);
-  console.log("managed to parse")
   if (!parsed || typeof parsed.msgId !== 'number') {
     return;
+  }
+
+  if (parsed.updates && parsed.updates.length) {
+    parsed.updates.forEach((update) => {
+      doLog("got sample from "+update.timestamp)
+    })
   }
 
   ws.send(JSON.stringify({
@@ -43,4 +52,8 @@ function tryParseJSON(string) {
   } catch (e) {
     return null;
   }
+}
+
+function doLog(str) {
+  console.log(new Date().toISOString() + ": " + str)
 }
