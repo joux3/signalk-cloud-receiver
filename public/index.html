@@ -26,19 +26,53 @@ body {
 #dashboard {
   position: fixed;
   height: 100px;
-  background-color: lightgreen;
+  background-color: black;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 999999;
 }
+#conn_status {
+  position: fixed;
+  right: 0;
+  top: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999999;
+  color: white;
+  padding: 3px;
+  opacity: 0.5;
+}
+.meter {
+  height: 100px;
+  width: 100px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  text-align: center;
+  line-height: 107px;
+  font-size: 25px;
+  position: relative;
+}
+.meter p {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+}
 </style>
 </head>
 <body>
+<div id="conn_status"></div>
 <div id="map">
 </div>
 <div id="dashboard">
-  <div id="conn_status"></div>
+<div id="speedThroughWater" class="meter">
+  <p>BOAT KTS</p>
+  <span></span>
+</div>
 </div>
 <script src="view.js"></script>
 </body>

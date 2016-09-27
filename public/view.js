@@ -62,9 +62,15 @@ function renderState(state, updatePath) {
     map.panTo([position.value.latitude, position.value.longitude])
   }
 
-  var heading = R.path(['navigation', 'headingTrue'], vessel) || R.path(['navigation', 'headingMagnetic'], vessel)
+  var heading = R.path(['navigation', 'courseOverGroundTrue'], vessel) || R.path(['navigation', 'headingTrue'], vessel) || 
+    R.path(['navigation', 'headingMagnetic'], vessel)
   if (heading && boatMarker) {
     var degrees = (heading.value / (2*Math.PI)) * 360 - 90
     boatMarker.setRotationAngle(degrees)
+  }
+
+  var speed = R.path(['navigation', 'speedThroughWater'], vessel)
+  if (speed) {
+    $("#speedThroughWater span").text(parseFloat(Math.round(speed.value * 10) / 10).toFixed(1))
   }
 }
