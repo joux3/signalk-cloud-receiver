@@ -42,16 +42,21 @@ body {
   padding: 3px;
   opacity: 0.5;
 }
+.meter:first-child {
+  border-width: 1px;
+}
 .meter {
   height: 100px;
   width: 100px;
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.5);
+  border-width: 1px 1px 1px 0;
   color: white;
   text-align: center;
   line-height: 107px;
   font-size: 25px;
   position: relative;
+  display: inline-block;
 }
 .meter p {
   position: absolute;
@@ -71,6 +76,9 @@ body {
 <div id="dashboard">
 <div id="speedThroughWater" class="meter">
   <p>BOAT KTS</p>
+  <span></span>
+</div><div id="speedOverGround" class="meter">
+  <p>SOG</p>
   <span></span>
 </div>
 </div>

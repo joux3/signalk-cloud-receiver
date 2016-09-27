@@ -73,4 +73,8 @@ function renderState(state, updatePath) {
   if (speed) {
     $("#speedThroughWater span").text(parseFloat(Math.round(speed.value * 10) / 10).toFixed(1))
   }
+  var sog = R.path(['navigation', 'speedOverGround'], vessel)
+  if (sog) {
+    $("#speedOverGround span").text(parseFloat(Math.round(sog.value * 10) / 10).toFixed(1))
+  }
 }
