@@ -73,7 +73,7 @@ function handleBoatMessage(boatId, ws, msg) {
         const pathStr = parsed.context + "." + value.path
         const path = pathStr.split('.')
 
-        if (R.pathOr(new Date(0), path, worldState) > new Date(update.timestamp)) {
+        if (new Date(R.pathOr(0, path.concat("timestamp"), worldState)) >= new Date(update.timestamp)) {
           doLog("Skipping update because it's older")
           return
         }
