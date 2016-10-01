@@ -74,14 +74,12 @@ function handleBoatMessage(boatId, ws, msg) {
         const path = pathStr.split('.')
 
         if (new Date(R.pathOr(0, path.concat("timestamp"), worldState)) >= new Date(update.timestamp)) {
-          doLog("Skipping update because it's older")
           return
         }
         const pathState = {
           value: value.value,
           timestamp: update.timestamp  
         }
-        doLog("Updating "+pathStr)
         worldState = R.assocPath(path, pathState, worldState)
         sendClientUpdate(pathStr, pathState)
       })
