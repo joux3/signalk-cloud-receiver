@@ -39,6 +39,9 @@ function createConnection() {
         var latLngs = msg.positions.map(function(position) {
           return [position.value.latitude, position.value.longitude]
         })
+        if (boatTrack) {
+          boatTrack.remove()
+        }
         boatTrack = L.polyline(latLngs, {color: 'red'}).addTo(map);
       }
     }
