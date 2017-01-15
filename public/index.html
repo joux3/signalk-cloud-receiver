@@ -1,85 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Boats</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.22.1/ramda.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.2/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<script src="leaflet.rotatedMarker.js"></script>
- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
-<style>
-body {
-  margin: 0;
-  padding: 0;
-}
-#map {
-  width: 100vw;
-  height: calc(100vh - 100px);
-  padding: 0;
-  padding-bottom: 100px;
-  box-sizing: border-box;
-  background-color: pink;
-}
-#dashboard {
-  position: fixed;
-  height: 100px;
-  background-color: black;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 999999;
-}
-#conn_status {
-  position: fixed;
-  right: 0;
-  top: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 999999;
-  color: white;
-  padding: 3px;
-  opacity: 0.5;
-}
-.meter:first-child {
-  border-width: 1px;
-}
-.meter {
-  height: 100px;
-  width: 100px;
-  box-sizing: border-box;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-width: 1px 1px 1px 0;
-  color: white;
-  text-align: center;
-  line-height: 107px;
-  font-size: 25px;
-  position: relative;
-  display: inline-block;
-}
-.meter p {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  margin: 0;
-  font-size: 14px;
-  line-height: 20px;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boats</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.22.1/ramda.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.2/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="leaflet.rotatedMarker.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css"/>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      width: 100vw;
+      height: calc(100vh - 100px);
+      padding: 0;
+      padding-bottom: 100px;
+      box-sizing: border-box;
+      background-color: pink;
+    }
+
+    #dashboard {
+      position: fixed;
+      height: 100px;
+      background-color: black;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 999999;
+    }
+
+    #conn_status {
+      position: fixed;
+      right: 0;
+      top: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999999;
+      color: white;
+      padding: 3px;
+      opacity: 0.5;
+    }
+
+    .meter:first-child {
+      border-width: 1px;
+    }
+
+    .meter {
+      height: 100px;
+      width: 100px;
+      box-sizing: border-box;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-width: 1px 1px 1px 0;
+      color: white;
+      text-align: center;
+      line-height: 107px;
+      font-size: 25px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .meter p {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      margin: 0;
+      font-size: 14px;
+      line-height: 20px;
+    }
+  </style>
 </head>
 <body>
 <div id="conn_status"></div>
 <div id="map">
 </div>
 <div id="dashboard">
-<div id="speedThroughWater" class="meter">
-  <p>BOAT KTS</p>
-  <span></span>
-</div><div id="speedOverGround" class="meter">
-  <p>SOG</p>
-  <span></span>
-</div>
+  <div id="speedThroughWater" class="meter">
+    <p>BOAT KTS</p>
+    <span></span>
+  </div>
+  <div id="speedOverGround" class="meter">
+    <p>SOG</p>
+    <span></span>
+  </div>
 </div>
 <script src="view.js"></script>
 </body>
