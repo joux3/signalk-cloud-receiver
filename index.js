@@ -1,10 +1,13 @@
 'use strict';
 
-const express = require('express');
-const app = express();
+const express = require('express')
+const app = express()
 const R = require('ramda')
+const Promise = require('bluebird')
+require('express-ws')(app)
+
 const deltaParser = require('./delta_parser')
-let expressWs = require('express-ws')(app); // eslint-disable-line no-unused-vars
+const db = require('./database')
 
 const port = process.env.PORT || 3005;
 
@@ -63,11 +66,12 @@ app.listen(port);
 console.log("Started listening at", port)
 
 function handleBoatMessage(boatId, ws, msg) {
-  const parsed = tryParseJSON(msg);
+  const parsed = tryParseJSON(msg)
 
   const updates = deltaParser(parsed)
   updates.forEach(update => {
-    const globalPath = (update.vessel + '.' + update.pathStr).split('.')
+    const globalPathStr = update.vessel + '.' + update.pathStr
+    const globalPath = globalPathStr.split('.')
     if (new Date(R.pathOr(0, globalPath.concat("timestamp"), worldState)) >= update.timestamp) {
       return
     }
@@ -76,14 +80,24 @@ function handleBoatMessage(boatId, ws, msg) {
       timestamp: update.timestamp.toISOString()
     }
     worldState = R.assocPath(globalPath, pathState, worldState)
-    sendClientUpdate(pathStr, pathState)
+    sendClientUpdate(globalPathStr, pathState)
   })
 
-  if (typeof parsed.msgId === 'number') {
-    ws.send(JSON.stringify({
-      "ACK": parsed.msgId
-    }))
-  }
+  const hasMsgId = parsed && typeof parsed.msgId === 'number'
+  Promise.map(updates, db.storeUpdate).then(() => {
+    if (hasMsgId) {
+      ws.send(JSON.stringify({
+        "ACK": parsed.msgId
+      }))
+    }
+  }).catch((error) => {
+    console.log('Error in storing', error)
+    if (hasMsgId) {
+      ws.send(JSON.stringify({
+        "ERRACK": parsed.msgId
+      }))
+    }
+  })
 }
 
 function tryParseJSON(string) {

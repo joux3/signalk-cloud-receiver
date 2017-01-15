@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "lint": "eslint  . --ext .js"
+    "lint": "eslint  . --ext .js",
+    "watch": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
@@ -14,6 +15,7 @@
     "bluebird": "^3.4.7",
     "express": "^4.13.4",
     "express-ws": "^2.0.0-beta",
+    "nodemon": "^1.11.0",
     "ramda": "^0.22.1",
     "sqlite3": "^3.1.8",
     "ws": "^1.1.0"
