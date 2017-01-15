@@ -47,6 +47,9 @@ db.execAsync(initQuery).then(() => {
 })
 
 function storeUpdate(update) {
+  if (update.pathStr === 'navigation.datetime') {
+    return
+  }
   return db.runAsync("INSERT OR IGNORE INTO vessels (vessel) VALUES($vessel);", {
     $vessel: update.vessel
   }).then(() => {
@@ -59,7 +62,7 @@ function storeUpdate(update) {
       $time: update.timestamp.getTime(),
       $vessel: update.vessel,
       $path: update.pathStr,
-      $value: JSON.stringify(update.value)
+      $value: typeof update.value === 'object' ? JSON.stringify(update.value) : update.value
     })
   })
 }
