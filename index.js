@@ -3,6 +3,7 @@
 const express = require('express');
 const app = express();
 const R = require('ramda')
+const deltaParser = require('./delta_parser')
 let expressWs = require('express-ws')(app); // eslint-disable-line no-unused-vars
 
 const port = process.env.PORT || 3005;
@@ -62,29 +63,21 @@ app.listen(port);
 console.log("Started listening at", port)
 
 function handleBoatMessage(boatId, ws, msg) {
-  var parsed = tryParseJSON(msg);
-  if (!parsed || !parsed.updates || !parsed.updates.length) {
-    return;
-  }
+  const parsed = tryParseJSON(msg);
 
-  if (parsed.updates && parsed.updates.length) {
-    parsed.updates.forEach((update) => {
-      update.values.forEach((value) => {
-        const pathStr = parsed.context + "." + value.path
-        const path = pathStr.split('.')
-
-        if (new Date(R.pathOr(0, path.concat("timestamp"), worldState)) >= new Date(update.timestamp)) {
-          return
-        }
-        const pathState = {
-          value: value.value,
-          timestamp: update.timestamp  
-        }
-        worldState = R.assocPath(path, pathState, worldState)
-        sendClientUpdate(pathStr, pathState)
-      })
-    })
-  }
+  const updates = deltaParser(parsed)
+  updates.forEach(update => {
+    const path = update.pathStr.split('.')
+    if (new Date(R.pathOr(0, path.concat("timestamp"), worldState)) >= update.timestamp) {
+      return
+    }
+    const pathState = {
+      value: update.value,
+      timestamp: update.timestamp.toISOString()
+    }
+    worldState = R.assocPath(path, pathState, worldState)
+    sendClientUpdate(pathStr, pathState)
+  })
 
   if (typeof parsed.msgId === 'number') {
     ws.send(JSON.stringify({
