@@ -1,4 +1,4 @@
-var map = L.map('map').setView([60.148665, 24.949106], 14);
+var map = L.map('map')
 
 L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 	maxZoom: 19,
@@ -26,10 +26,10 @@ function createConnection() {
     if (!initialReceived) {
       initialReceived = true
       state = msg
-      renderState(state)
+      renderState(state, {firstRender: true})
     } else {
       state = R.assocPath(msg.path.split('.'), {value: msg.value, timestamp: msg.timestamp}, state)
-      renderState(state, msg.path)
+      renderState(state, {updatePath: msg.path})
     }
   }
 }
@@ -46,7 +46,7 @@ var boatIcon = L.icon({
 })
 
 var boatMarkers = {}
-function renderState(state, updatePath) {
+function renderState(state, opts) {
   var vessels = state && state.vessels
   Object.keys(vessels).forEach(function(vesselId) {
     var vessel = vessels[vesselId]
@@ -60,7 +60,6 @@ function renderState(state, updatePath) {
         boatMarker = L.marker([position.value.latitude, position.value.longitude], {icon: boatIcon}).addTo(map)
         boatMarkers[vesselId] = boatMarker
       }
-      map.panTo([position.value.latitude, position.value.longitude])
     }
 
     var heading = R.path(['navigation', 'courseOverGroundTrue'], vessel) || R.path(['navigation', 'headingTrue'], vessel) ||
@@ -79,4 +78,15 @@ function renderState(state, updatePath) {
       $("#speedOverGround span").text(parseFloat(Math.round(sog.value * 10) / 10).toFixed(1))
     }
   })
+  if (opts.firstRender) {
+    var points = Object.keys(boatMarkers).map(function(vesselId) {
+      return boatMarkers[vesselId].getLatLng()
+    })
+    var latLngBounds = L.latLngBounds(points)
+    if (points.length == 0) {
+      map.setView([60.148665, 24.949106], 14);
+    } else {
+      map.fitBounds(latLngBounds)
+    }
+  }
 }
