@@ -44,12 +44,16 @@ function sendClientUpdate(pathStr, pathState) {
 }
 
 var worldState = {}
-db.getLatestPositions().then(positions => {
-  positions.forEach(position => {
-    const globalPathStr = position.vessel + '.' + position.path
+db.getLatest30SecondsPerVessel().then(updates => {
+  updates.forEach(update => {
+    const globalPathStr = update.vessel + '.' + update.path
+    const globalPath = globalPathStr.split('.')
+    if (new Date(R.pathOr(0, globalPath.concat("timestamp"), worldState)) >= update.time) {
+      return
+    }
     const pathState = {
-      value: position.value,
-      timestamp: position.time.toISOString()
+      value: update.value,
+      timestamp: update.time.toISOString()
     }
     worldState = R.assocPath(globalPathStr.split('.'), pathState, worldState)
   })
