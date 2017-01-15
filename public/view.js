@@ -10,7 +10,7 @@ createConnection()
 var state = {}
 var ws
 function createConnection() {
-  ws = new WebSocket("ws://" + window.location.host + "/signalk-output")
+  ws = new WebSocket(window.location.protocol.replace('http', 'ws') + "//" + window.location.host + "/signalk-output")
   connStatus("Connecting") 
   ws.onopen = function() {
     connStatus("Connected") 
