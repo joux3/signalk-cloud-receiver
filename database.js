@@ -78,7 +78,42 @@ function storeUpdate(update) {
   })
 }
 
+function getLatestPositions() {
+  return db.getAsync("SELECT id FROM paths WHERE path = 'navigation.position'").then((row) => {
+    if (!row || !row.id) {
+      return {}
+    }
+    const pathId = row.id
+    return db.allAsync(
+      'select time, value, vessel, path from entries\
+       INNER JOIN (\
+         select vessel_id, max(time) as max_time from entries where path_id = $path_id group by vessel_id\
+       ) AS newest\
+       ON newest.vessel_id = entries.vessel_id AND newest.max_time = entries.time\
+       INNER JOIN vessels ON vessels.id = entries.vessel_id\
+       INNER JOIN paths ON paths.id = entries.path_id\
+       WHERE entries.path_id = $path_id', {
+        $path_id: pathId
+    }).then(rows => {
+      rows.forEach(parseDbRow)
+      return rows
+    })
+  })
+}
+
+function parseDbRow(row) {
+  if (typeof row.value === 'string' && row.value[0] === '{') {
+    row.value = JSON.parse(row.value)
+  } else if (typeof row.value === 'string' && !isNaN(Number(row.value))) {
+    row.value = Number(row.value)
+  }
+  if (typeof row.time === 'number') {
+    row.time = new Date(row.time)
+  }
+}
+
 module.exports = {
-  storeUpdate
+  storeUpdate,
+  getLatestPositions
 }
 

@@ -44,6 +44,16 @@ function sendClientUpdate(pathStr, pathState) {
 }
 
 var worldState = {}
+db.getLatestPositions().then(positions => {
+  positions.forEach(position => {
+    const globalPathStr = position.vessel + '.' + position.path
+    const pathState = {
+      value: position.value,
+      timestamp: position.time.toISOString()
+    }
+    worldState = R.assocPath(globalPathStr.split('.'), pathState, worldState)
+  })
+})
 
 app.ws('/signalk-input', (ws) => {
   ws.__boatId = Math.random();
