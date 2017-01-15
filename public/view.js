@@ -45,36 +45,38 @@ var boatIcon = L.icon({
   className: "boat-icon"
 })
 
-var boatMarker
+var boatMarkers = {}
 function renderState(state, updatePath) {
-  var vessel = state && state.vessels && state.vessels[Object.keys(state.vessels)[0]]
-  if (!vessel) {
-    return
-  }
+  var vessels = state && state.vessels
+  Object.keys(vessels).forEach(function(vesselId) {
+    var vessel = vessels[vesselId]
 
-  var position = R.path(['navigation', 'position'], vessel)
-  if (position) {
-    if (boatMarker) {
-      boatMarker.setLatLng([position.value.latitude, position.value.longitude])
-    } else {
-      boatMarker = L.marker([position.value.latitude, position.value.longitude], {icon: boatIcon}).addTo(map)
+    var position = R.path(['navigation', 'position'], vessel)
+    var boatMarker = boatMarkers[vesselId]
+    if (position) {
+      if (boatMarker) {
+        boatMarker.setLatLng([position.value.latitude, position.value.longitude])
+      } else {
+        boatMarker = L.marker([position.value.latitude, position.value.longitude], {icon: boatIcon}).addTo(map)
+        boatMarkers[vesselId] = boatMarker
+      }
+      map.panTo([position.value.latitude, position.value.longitude])
     }
-    map.panTo([position.value.latitude, position.value.longitude])
-  }
 
-  var heading = R.path(['navigation', 'courseOverGroundTrue'], vessel) || R.path(['navigation', 'headingTrue'], vessel) || 
-    R.path(['navigation', 'headingMagnetic'], vessel)
-  if (heading && boatMarker) {
-    var degrees = (heading.value / (2*Math.PI)) * 360 - 90
-    boatMarker.setRotationAngle(degrees)
-  }
+    var heading = R.path(['navigation', 'courseOverGroundTrue'], vessel) || R.path(['navigation', 'headingTrue'], vessel) ||
+      R.path(['navigation', 'headingMagnetic'], vessel)
+    if (heading && boatMarker) {
+      var degrees = (heading.value / (2*Math.PI)) * 360 - 90
+      boatMarker.setRotationAngle(degrees)
+    }
 
-  var speed = R.path(['navigation', 'speedThroughWater'], vessel)
-  if (speed) {
-    $("#speedThroughWater span").text(parseFloat(Math.round(speed.value * 10) / 10).toFixed(1))
-  }
-  var sog = R.path(['navigation', 'speedOverGround'], vessel)
-  if (sog) {
-    $("#speedOverGround span").text(parseFloat(Math.round(sog.value * 10) / 10).toFixed(1))
-  }
+    var speed = R.path(['navigation', 'speedThroughWater'], vessel)
+    if (speed) {
+      $("#speedThroughWater span").text(parseFloat(Math.round(speed.value * 10) / 10).toFixed(1))
+    }
+    var sog = R.path(['navigation', 'speedOverGround'], vessel)
+    if (sog) {
+      $("#speedOverGround span").text(parseFloat(Math.round(sog.value * 10) / 10).toFixed(1))
+    }
+  })
 }
