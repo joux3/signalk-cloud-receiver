@@ -16,3 +16,9 @@ db size 16 044 032 bytes
 Got a total of 117295 deltas
 Saving to sqlite took 67 155 ms
 db size 9 211 904 bytes
+
+# entries + vessels + paths tables
+File parsing took 1671 ms
+Got a total of 117295 deltas
+Saving to sqlite took 77 745 ms
+db size 5 173 248 bytes

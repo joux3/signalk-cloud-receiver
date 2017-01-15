@@ -12,7 +12,9 @@ Promise.promisifyAll(db)
 let initQuery = 'PRAGMA journal_mode=WAL;'
 initQuery += 'PRAGMA foreign_keys = ON;'
 initQuery += 'CREATE TABLE vessels (id INTEGER PRIMARY KEY, vessel TEXT UNIQUE);'
-initQuery += 'CREATE TABLE entries (time INTEGER, vessel_id INTEGER NOT NULL, path TEXT, value TEXT, FOREIGN KEY(vessel_id) REFERENCES vessels(id));'
+initQuery += 'CREATE TABLE paths (id INTEGER PRIMARY KEY, path TEXT UNIQUE);'
+initQuery += 'CREATE TABLE entries (time INTEGER, vessel_id INTEGER NOT NULL, path_id INTEGER NOT NULL, value TEXT, ' +
+  'FOREIGN KEY(vessel_id) REFERENCES vessels(id), FOREIGN KEY(path_id) REFERENCES paths(id));'
 
 db.execAsync(initQuery).then(() => {
   console.log('Opening', inputFile)
@@ -37,21 +39,28 @@ db.execAsync(initQuery).then(() => {
   const start = new Date()
   return Promise.map(objects, object => {
     const updates = deltaParser(object)
-    return Promise.map(updates, update => {
-      return db.runAsync("INSERT OR IGNORE INTO vessels (vessel) VALUES($vessel);", {
-        $vessel: update.vessel
-      }).then(() => {
-        return db.runAsync("INSERT INTO entries (time, vessel_id, path, value) VALUES ($time, (SELECT id FROM vessels WHERE vessel = $vessel), $path, $value)", {
-          $time: update.timestamp.getTime(),
-          $vessel: update.vessel,
-          $path: update.pathStr,
-          $value: JSON.stringify(update.value)
-        })
-      })
-    })
+    return Promise.map(updates, storeUpdate)
   }).then(() => {
     console.log("Saving to sqlite took", new Date() - start, "ms")
     db.close()
   })
 })
+
+function storeUpdate(update) {
+  return db.runAsync("INSERT OR IGNORE INTO vessels (vessel) VALUES($vessel);", {
+    $vessel: update.vessel
+  }).then(() => {
+    return db.runAsync("INSERT OR IGNORE INTO paths (path) VALUES($path);", {
+      $path: update.pathStr
+    })
+  }).then(() => {
+    return db.runAsync("INSERT INTO entries (time, vessel_id, path_id, value) VALUES " +
+      "($time, (SELECT id FROM vessels WHERE vessel = $vessel), (SELECT id FROM paths WHERE path = $path), $value)", {
+      $time: update.timestamp.getTime(),
+      $vessel: update.vessel,
+      $path: update.pathStr,
+      $value: JSON.stringify(update.value)
+    })
+  })
+}
 
