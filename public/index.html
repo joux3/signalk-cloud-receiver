@@ -72,6 +72,15 @@
       font-size: 14px;
       line-height: 20px;
     }
+
+    #no-boat {
+      color: white;
+      line-height: 100px;
+      text-align: center;
+    }
+    #active-boat {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -79,13 +88,18 @@
 <div id="map">
 </div>
 <div id="dashboard">
-  <div id="speedThroughWater" class="meter">
-    <p>BOAT KTS</p>
-    <span></span>
+  <div id="no-boat">
+    Click a boat to view dashboard
   </div>
-  <div id="speedOverGround" class="meter">
-    <p>SOG</p>
-    <span></span>
+  <div id="active-boat">
+    <div id="speedThroughWater" class="meter">
+      <p>BOAT KTS</p>
+      <span></span>
+    </div>
+    <div id="speedOverGround" class="meter">
+      <p>SOG</p>
+      <span></span>
+    </div>
   </div>
 </div>
 <script src="view.js"></script>

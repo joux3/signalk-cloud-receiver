@@ -49,6 +49,9 @@ var selectedBoat
 var boatMarkers = {}
 function renderState(opts) {
   var vessels = state && state.vessels
+
+  $('#no-boat').toggle(!selectedBoat)
+  $('#active-boat').toggle(!!selectedBoat)
   Object.keys(vessels).forEach(function(vesselId) {
     var vessel = vessels[vesselId]
 
