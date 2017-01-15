@@ -7,6 +7,7 @@ L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 createConnection()
 
+var state = {}
 function createConnection() {
   var ws = new WebSocket("ws://" + window.location.host + "/signalk-output")
   connStatus("Connecting") 
@@ -20,16 +21,15 @@ function createConnection() {
   }
 
   var initialReceived = false
-  var state = {}
   ws.onmessage = function(event) {
     var msg = JSON.parse(event.data)
     if (!initialReceived) {
       initialReceived = true
       state = msg
-      renderState(state, {firstRender: true})
+      renderState({firstRender: true})
     } else {
       state = R.assocPath(msg.path.split('.'), {value: msg.value, timestamp: msg.timestamp}, state)
-      renderState(state, {updatePath: msg.path})
+      renderState({updatePath: msg.path})
     }
   }
 }
@@ -45,8 +45,9 @@ var boatIcon = L.icon({
   className: "boat-icon"
 })
 
+var selectedBoat
 var boatMarkers = {}
-function renderState(state, opts) {
+function renderState(opts) {
   var vessels = state && state.vessels
   Object.keys(vessels).forEach(function(vesselId) {
     var vessel = vessels[vesselId]
@@ -58,6 +59,9 @@ function renderState(state, opts) {
         boatMarker.setLatLng([position.value.latitude, position.value.longitude])
       } else {
         boatMarker = L.marker([position.value.latitude, position.value.longitude], {icon: boatIcon}).addTo(map)
+        boatMarker.on('click', function() {
+          markerClicked(vesselId)
+        })
         boatMarkers[vesselId] = boatMarker
       }
     }
@@ -69,13 +73,12 @@ function renderState(state, opts) {
       boatMarker.setRotationAngle(degrees)
     }
 
-    var speed = R.path(['navigation', 'speedThroughWater'], vessel)
-    if (speed) {
-      $("#speedThroughWater span").text(parseFloat(Math.round(speed.value * 10) / 10).toFixed(1))
-    }
-    var sog = R.path(['navigation', 'speedOverGround'], vessel)
-    if (sog) {
-      $("#speedOverGround span").text(parseFloat(Math.round(sog.value * 10) / 10).toFixed(1))
+    if (selectedBoat === vesselId) {
+      var speed = R.path(['navigation', 'speedThroughWater'], vessel)
+      $("#speedThroughWater span").text(numberFormat(speed))
+
+      var sog = R.path(['navigation', 'speedOverGround'], vessel)
+      $("#speedOverGround span").text(numberFormat(sog))
     }
   })
   if (opts.firstRender) {
@@ -89,4 +92,13 @@ function renderState(state, opts) {
       map.fitBounds(latLngBounds)
     }
   }
+}
+
+function markerClicked(vesselId) {
+  selectedBoat = vesselId
+  renderState({})
+}
+
+function numberFormat(number) {
+  return number ? parseFloat(Math.round(number.value * 10) / 10).toFixed(1) : '-'
 }
