@@ -1,0 +1,18 @@
+# CREATE TABLE entries (time INTEGER, vessel TEXT, path TEXT, value TEXT)
+
+## journal mode
+Got a total of 117295 deltas
+Saving to sqlite took 179 613 ms
+db size 16 044 032 bytes
+
+## wal mode
+Got a total of 117295 deltas
+Saving to sqlite took 48 505 ms
+db size 16 044 032 bytes
+
+# entries + vessels tables
+
+## wal mode
+Got a total of 117295 deltas
+Saving to sqlite took 67 155 ms
+db size 9 211 904 bytes
