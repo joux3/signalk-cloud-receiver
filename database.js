@@ -90,9 +90,31 @@ function getLatest30SecondsPerVessel() {
     ON newest.vessel_id = entries.vessel_id AND newest.max_time >= entries.time AND newest.max_time - 30000 <= entries.time\
     INNER JOIN vessels ON vessels.id = entries.vessel_id\
     INNER JOIN paths ON paths.id = entries.path_id"
-  console.log(query)
   return db.allAsync(query).then(rows => {
     console.log("getLatest30SecondsPerVessel took", new Date() - start, "ms")
+    rows.forEach(parseDbRow)
+    return rows
+  })
+}
+
+function getPositionsFor10Minutes(vesselId) {
+  const start = new Date()
+  const query = "SELECT time, value, vessel, path FROM entries\
+    INNER JOIN (\
+      SELECT vessel_id, max(time) AS max_time FROM entries\
+      INNER JOIN paths ON paths.id = entries.path_id\
+      INNER JOIN vessels ON vessels.id = entries.vessel_id\
+      WHERE paths.path = 'navigation.position' AND vessels.vessel = $vessel_id\
+    ) AS newest\
+    ON newest.vessel_id = entries.vessel_id AND entries.time >= newest.max_time - 600000\
+    INNER JOIN vessels ON vessels.id = entries.vessel_id\
+    INNER JOIN paths ON paths.id = entries.path_id\
+    WHERE paths.path = 'navigation.position'\
+    ORDER BY time DESC"
+  return db.allAsync(query, {
+    $vessel_id: 'vessels.' + vesselId
+  }).then(rows => {
+    console.log("getPositionsFor10Minutes took", new Date() - start, "ms")
     rows.forEach(parseDbRow)
     return rows
   })
@@ -111,6 +133,7 @@ function parseDbRow(row) {
 
 module.exports = {
   storeUpdate,
-  getLatest30SecondsPerVessel
+  getLatest30SecondsPerVessel,
+  getPositionsFor10Minutes
 }
 

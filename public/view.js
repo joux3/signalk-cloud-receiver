@@ -8,8 +8,9 @@ L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 createConnection()
 
 var state = {}
+var ws
 function createConnection() {
-  var ws = new WebSocket("ws://" + window.location.host + "/signalk-output")
+  ws = new WebSocket("ws://" + window.location.host + "/signalk-output")
   connStatus("Connecting") 
   ws.onopen = function() {
     connStatus("Connected") 
@@ -24,15 +25,21 @@ function createConnection() {
   ws.onmessage = function(event) {
     var msg = JSON.parse(event.data)
     var type = msg.type
-    var data = msg.data
     if (type === 'state') {
       if (!initialReceived) {
         initialReceived = true
-        state = data
+        state = msg.data
         renderState({firstRender: true})
       } else {
-        state = R.assocPath(data.path.split('.'), {value: data.value, timestamp: data.timestamp}, state)
+        state = R.assocPath(msg.data.path.split('.'), {value: msg.data.value, timestamp: msg.data.timestamp}, state)
         renderState({updatePath: data.path})
+      }
+    } else if (type === 'boatTrack') {
+      if (selectedBoat === msg.vesselId) {
+        var latLngs = msg.positions.map(function(position) {
+          return [position.value.latitude, position.value.longitude]
+        })
+        boatTrack = L.polyline(latLngs, {color: 'red'}).addTo(map);
       }
     }
   }
@@ -51,6 +58,7 @@ var boatIcon = L.icon({
 
 var selectedBoat
 var boatMarkers = {}
+var boatTrack
 function renderState(opts) {
   var vessels = state && state.vessels
 
@@ -103,8 +111,13 @@ function renderState(opts) {
 }
 
 function markerClicked(vesselId) {
+  if (boatTrack) {
+    boatTrack.remove()
+    boatTrack = undefined
+  }
   selectedBoat = vesselId
   renderState({})
+  ws.send(JSON.stringify({type: "requestTrack", vesselId: vesselId}))
 }
 
 function numberFormat(number) {

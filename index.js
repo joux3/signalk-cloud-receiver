@@ -25,6 +25,14 @@ app.ws('/signalk-output', (ws, req) => {
   connectedClients[ws.__clientId] = ws
   ws.send(JSON.stringify({type: 'state', data: worldState}))
 
+  ws.on('message', function(msg) {
+    const parsed = tryParseJSON(msg)
+    if (parsed && parsed.type === 'requestTrack' && typeof parsed.vesselId === 'string') {
+      db.getPositionsFor10Minutes(parsed.vesselId).then(positions => {
+        ws.send(JSON.stringify({type: 'boatTrack', vesselId: parsed.vesselId, positions}))
+      })
+    }
+  })
   ws.on('close', cleanup)
   ws.on('error', cleanup)
   function cleanup() {
