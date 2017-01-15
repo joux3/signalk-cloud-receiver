@@ -9,7 +9,7 @@ const inputFile = process.argv[2] || (console.log('Input file needed!'), process
 
 const db = new sqlite3.Database('test_db_'+new Date().getTime()+'.sqlite');
 Promise.promisifyAll(db)
-db.execAsync('CREATE TABLE entries (time INTEGER, vessel TEXT, path TEXT, value TEXT)').then(() => {
+db.execAsync('PRAGMA journal_mode=WAL; CREATE TABLE entries (time INTEGER, vessel TEXT, path TEXT, value TEXT);').then(() => {
   console.log('Opening', inputFile)
 
   return new Promise(resolve => {
