@@ -23,6 +23,9 @@ Saving to sqlite took 80 213 ms
 db size 5 152 768 bytes
 
 # + ei datetimejä
-Got a total of 117295 deltas
 Saving to sqlite took 72 931 ms
 db size 4 702 208 bytes
+
+# latest
+Saving to sqlite took 58 429 ms
+db size 4 706 304 bytes

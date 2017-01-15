@@ -40,23 +40,58 @@ db.execAsync(initQuery).then(() => {
   return Promise.map(objects, object => {
     const updates = deltaParser(object)
     return Promise.map(updates, storeUpdate)
-  }).then(() => {
+  }, {concurrency: 1}).then(() => {
     console.log("Saving to sqlite took", new Date() - start, "ms")
     db.close()
   })
 })
 
+const createdVessels = {}
+function createVesselId(update) {
+  if (createdVessels[update.vessel]) {
+    return Promise.resolve()
+  }
+  return new Promise((resolve, reject) => {
+    db.run("INSERT OR IGNORE INTO vessels (vessel) VALUES($vessel);", {
+      $vessel: update.vessel
+    }, function(err) {
+      if (err) {
+        reject(err)
+      } else {
+        createdVessels[update.vessel] = this.lastID
+        resolve()
+      }
+    })
+  })
+}
+
+const createdPaths = {}
+function createPathId(update) {
+  if (createdPaths[update.pathStr]) {
+    return Promise.resolve()
+  }
+  return new Promise((resolve, reject) => {
+    db.run("INSERT OR IGNORE INTO paths (path) VALUES($path);", {
+      $path: update.pathStr
+    }, function(err) {
+      if (err) {
+        reject(err)
+      } else {
+        createdPaths[update.pathStr] = this.lastID
+        resolve()
+      }
+    })
+  })
+}
+
+
 function storeUpdate(update) {
   if (update.pathStr === 'navigation.datetime') {
     return
   }
-  return db.runAsync("INSERT OR IGNORE INTO vessels (vessel) VALUES($vessel);", {
-    $vessel: update.vessel
-  }).then(() => {
-    return db.runAsync("INSERT OR IGNORE INTO paths (path) VALUES($path);", {
-      $path: update.pathStr
-    })
-  }).then(() => {
+  const vesselIdPromise = createVesselId(update)
+  const pathIdPromise = createPathId(update)
+  return Promise.join(vesselIdPromise, pathIdPromise, () => {
     return db.runAsync("INSERT INTO entries (time, vessel_id, path_id, value) VALUES " +
       "($time, (SELECT id FROM vessels WHERE vessel = $vessel), (SELECT id FROM paths WHERE path = $path), $value)", {
       $time: update.timestamp.getTime(),
