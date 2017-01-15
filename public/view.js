@@ -62,6 +62,7 @@ function renderState(opts) {
         boatMarker.on('click', function() {
           markerClicked(vesselId)
         })
+        boatMarker.bindTooltip(vesselId)
         boatMarkers[vesselId] = boatMarker
       }
     }
