@@ -23,13 +23,17 @@ function createConnection() {
   var initialReceived = false
   ws.onmessage = function(event) {
     var msg = JSON.parse(event.data)
-    if (!initialReceived) {
-      initialReceived = true
-      state = msg
-      renderState({firstRender: true})
-    } else {
-      state = R.assocPath(msg.path.split('.'), {value: msg.value, timestamp: msg.timestamp}, state)
-      renderState({updatePath: msg.path})
+    var type = msg.type
+    var data = msg.data
+    if (type === 'state') {
+      if (!initialReceived) {
+        initialReceived = true
+        state = data
+        renderState({firstRender: true})
+      } else {
+        state = R.assocPath(data.path.split('.'), {value: data.value, timestamp: data.timestamp}, state)
+        renderState({updatePath: data.path})
+      }
     }
   }
 }

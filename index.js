@@ -23,7 +23,7 @@ app.ws('/signalk-output', (ws, req) => {
   // TODO check auth based on req
   ws.__clientId = clientId++
   connectedClients[ws.__clientId] = ws
-  ws.send(JSON.stringify(worldState))
+  ws.send(JSON.stringify({type: 'state', data: worldState}))
 
   ws.on('close', cleanup)
   ws.on('error', cleanup)
@@ -34,9 +34,12 @@ app.ws('/signalk-output', (ws, req) => {
 
 function sendClientUpdate(pathStr, pathState) {
   const messageStr = JSON.stringify({
-    path: pathStr,
-    value: pathState.value,
-    timestamp: pathState.timestamp
+    type: 'state',
+    data: {
+      path: pathStr,
+      value: pathState.value,
+      timestamp: pathState.timestamp
+    }
   })
   Object.keys(connectedClients).forEach((clientId) => {
     connectedClients[clientId].send(messageStr)
