@@ -6,15 +6,20 @@ const sqlite3 = require("sqlite3")
 const deltaParser = require('./delta_parser')
 
 const inputFile = process.argv[2] || (console.log('Input file needed!'), process.exit(5))
+const databaseFile = process.argv[3]
 
-const db = new sqlite3.Database('test_db_'+new Date().getTime()+'.sqlite');
+const db = new sqlite3.Database(databaseFile || 'test_db_'+new Date().getTime()+'.sqlite');
 Promise.promisifyAll(db)
 let initQuery = 'PRAGMA journal_mode=WAL;'
 initQuery += 'PRAGMA foreign_keys = ON;'
-initQuery += 'CREATE TABLE vessels (id INTEGER PRIMARY KEY, vessel TEXT UNIQUE);'
-initQuery += 'CREATE TABLE paths (id INTEGER PRIMARY KEY, path TEXT UNIQUE);'
-initQuery += 'CREATE TABLE entries (time INTEGER, vessel_id INTEGER NOT NULL, path_id INTEGER NOT NULL, value TEXT, ' +
-  'FOREIGN KEY(vessel_id) REFERENCES vessels(id), FOREIGN KEY(path_id) REFERENCES paths(id));'
+if (!databaseFile) {
+  initQuery += 'CREATE TABLE vessels (id INTEGER PRIMARY KEY, vessel TEXT UNIQUE);'
+  initQuery += 'CREATE TABLE paths (id INTEGER PRIMARY KEY, path TEXT UNIQUE);'
+  initQuery += 'CREATE TABLE entries (time INTEGER, vessel_id INTEGER NOT NULL, path_id INTEGER NOT NULL, value TEXT, ' +
+    'FOREIGN KEY(vessel_id) REFERENCES vessels(id), FOREIGN KEY(path_id) REFERENCES paths(id));'
+  initQuery += 'CREATE INDEX vessel_path_time ON entries (vessel_id, path_id, time);'
+}
+initQuery += "BEGIN;"
 
 db.execAsync(initQuery).then(() => {
   console.log('Opening', inputFile)
@@ -42,6 +47,8 @@ db.execAsync(initQuery).then(() => {
     return Promise.map(updates, storeUpdate)
   }, {concurrency: 1}).then(() => {
     console.log("Saving to sqlite took", new Date() - start, "ms")
+    return db.execAsync("COMMIT;")
+  }).then(() => {
     db.close()
   })
 })
