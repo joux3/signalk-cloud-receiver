@@ -67,15 +67,15 @@ function handleBoatMessage(boatId, ws, msg) {
 
   const updates = deltaParser(parsed)
   updates.forEach(update => {
-    const path = update.pathStr.split('.')
-    if (new Date(R.pathOr(0, path.concat("timestamp"), worldState)) >= update.timestamp) {
+    const globalPath = (update.vessel + '.' + update.pathStr).split('.')
+    if (new Date(R.pathOr(0, globalPath.concat("timestamp"), worldState)) >= update.timestamp) {
       return
     }
     const pathState = {
       value: update.value,
       timestamp: update.timestamp.toISOString()
     }
-    worldState = R.assocPath(path, pathState, worldState)
+    worldState = R.assocPath(globalPath, pathState, worldState)
     sendClientUpdate(pathStr, pathState)
   })
 

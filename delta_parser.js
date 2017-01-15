@@ -11,7 +11,8 @@ function deltaParser(deltaMessage) {
       const pathStr = deltaMessage.context + "." + value.path
 
       const parsedUpdate = {
-        pathStr,
+        vessel: deltaMessage.context,
+        pathStr: value.path,
         value: value.value,
         timestamp: new Date(update.timestamp)
       }
