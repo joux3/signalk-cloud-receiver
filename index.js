@@ -6,27 +6,47 @@ const R = require('ramda')
 const Promise = require('bluebird')
 require('express-ws')(app)
 const cookieSession = require('cookie-session')
+const bodyParser = require('body-parser')
 
 const deltaParser = require('./delta_parser')
 const db = require('./database')
 
-const port = process.env.PORT || 3005;
+const port = process.env.PORT || 3005
 
-app.use(express.static('public'))
-
+const PASSWORD = process.env.PASSWORD || 'testpw'
+if (!process.env.PASSWORD && process.env.NODE_ENV === 'production') {
+  console.log("PASSWORD not set! Stopping")
+  process.exit(1)
+}
 if (!process.env.COOKIE_SECRET && process.env.NODE_ENV === 'production') {
   console.log("COOKIE_SECRET not set! Stopping")
   process.exit(1)
 }
+
+app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieSession({
   name: 'session',
-  keys: [process.env.COOKIE_SECRET]
+  keys: [process.env.COOKIE_SECRET || 'fallbackSecret']
 }))
+app.use(function(req, res, next) {
+  if (req.session.loginPassword === PASSWORD) {
+    next()
+  } else if (req.method === 'POST' && req.body.password === PASSWORD) {
+    req.session.loginPassword = PASSWORD
+    res.redirect('/')
+  } else {
+    const wrongPw = req.method === 'POST' && req.body.password
+    const form = '<form method="post" action="/"><input type="password" name="password"><input type="submit" value="Login"></form>'
+    res.type('html').end(form + (wrongPw ? 'Wrong password!' : ''))
+  }
+})
+app.use(express.static('public'))
+
 
 var connectedClients = {}
 var clientId = 0
 app.ws('/signalk-output', (ws, req) => {
-  // TODO check auth based on req
+  doLog('Client connected', req.ip)
   ws.__clientId = clientId++
   connectedClients[ws.__clientId] = ws
   ws.send(JSON.stringify({type: 'state', data: worldState}))
@@ -94,7 +114,7 @@ app.ws('/signalk-input', (ws) => {
 });
 
 app.listen(port);
-console.log("Started listening at", port)
+doLog("Started listening at", port)
 
 function handleBoatMessage(boatId, ws, msg) {
   const parsed = tryParseJSON(msg)
@@ -122,7 +142,7 @@ function handleBoatMessage(boatId, ws, msg) {
       }))
     }
   }).catch((error) => {
-    console.log('Error in storing', error)
+    doLog('Error in storing', error)
     if (hasMsgId) {
       ws.send(JSON.stringify({
         "ERRACK": parsed.msgId
