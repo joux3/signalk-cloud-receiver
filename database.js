@@ -2,6 +2,8 @@ const Promise = require('bluebird')
 const sqlite3 = require("sqlite3")
 const fs = require('fs')
 
+const util = require('./util')
+
 const DATABASE_FILE = 'data/database.sqlite'
 const IGNORE_PATHS = {
   'navigation.datetime': true
@@ -91,7 +93,7 @@ function getLatest30SecondsPerVessel() {
     INNER JOIN vessels ON vessels.id = entries.vessel_id\
     INNER JOIN paths ON paths.id = entries.path_id"
   return db.allAsync(query).then(rows => {
-    console.log("getLatest30SecondsPerVessel took", new Date() - start, "ms")
+    util.doLog("getLatest30SecondsPerVessel took", new Date() - start, "ms")
     rows.forEach(parseDbRow)
     return rows
   })
@@ -114,7 +116,7 @@ function getPositionsFor10Minutes(vesselId) {
   return db.allAsync(query, {
     $vessel_id: 'vessels.' + vesselId
   }).then(rows => {
-    console.log("getPositionsFor10Minutes took", new Date() - start, "ms")
+    util.doLog("getPositionsFor10Minutes took", new Date() - start, "ms")
     rows.forEach(parseDbRow)
     return rows
   })

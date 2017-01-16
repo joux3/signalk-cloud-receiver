@@ -10,6 +10,7 @@ const bodyParser = require('body-parser')
 
 const deltaParser = require('./delta_parser')
 const db = require('./database')
+const util = require('./util')
 
 const port = process.env.PORT || 3005
 
@@ -46,13 +47,13 @@ app.use(express.static('public'))
 var connectedClients = {}
 var clientId = 0
 app.ws('/signalk-output', (ws, req) => {
-  doLog('Client connected', req.ip)
+  util.doLog('Client connected', req.ip)
   ws.__clientId = clientId++
   connectedClients[ws.__clientId] = ws
   ws.send(JSON.stringify({type: 'state', data: worldState}))
 
   ws.on('message', function(msg) {
-    const parsed = tryParseJSON(msg)
+    const parsed = util.tryParseJSON(msg)
     if (parsed && parsed.type === 'requestTrack' && typeof parsed.vesselId === 'string') {
       db.getPositionsFor10Minutes(parsed.vesselId).then(positions => {
         ws.send(JSON.stringify({type: 'boatTrack', vesselId: parsed.vesselId, positions}))
@@ -98,26 +99,26 @@ db.getLatest30SecondsPerVessel().then(updates => {
 
 app.ws('/signalk-input', (ws) => {
   ws.__boatId = Math.random();
-  doLog('boat ' + ws.__boatId + ' connected');
+  util.doLog('boat ' + ws.__boatId + ' connected');
 
   ws.on('message', msg => {
     handleBoatMessage(ws.__boatId, ws, msg);
   });
 
   ws.on('close', () => {
-    doLog('Boat ' + (ws.__boatId || '<unknown>') + ' disconnected');
+    util.doLog('Boat ' + (ws.__boatId || '<unknown>') + ' disconnected');
   })
 
   ws.on('error', () => {
-    doLog('Boat ' + (ws.__boatId || '<unknown>') + ' error');
+    util.doLog('Boat ' + (ws.__boatId || '<unknown>') + ' error');
   })
 });
 
-app.listen(port);
-doLog("Started listening at", port)
+app.listen(port)
+util.doLog("Started listening at", port)
 
 function handleBoatMessage(boatId, ws, msg) {
-  const parsed = tryParseJSON(msg)
+  const parsed = util.tryParseJSON(msg)
 
   const updates = deltaParser(parsed)
   updates.forEach(update => {
@@ -142,7 +143,7 @@ function handleBoatMessage(boatId, ws, msg) {
       }))
     }
   }).catch((error) => {
-    doLog('Error in storing', error)
+    util.doLog('Error in storing', error)
     if (hasMsgId) {
       ws.send(JSON.stringify({
         "ERRACK": parsed.msgId
@@ -151,14 +152,4 @@ function handleBoatMessage(boatId, ws, msg) {
   })
 }
 
-function tryParseJSON(string) {
-  try {
-    return JSON.parse(string);
-  } catch (e) {
-    return null;
-  }
-}
 
-function doLog(str) {
-  console.log(new Date().toISOString() + ": " + str)
-}
