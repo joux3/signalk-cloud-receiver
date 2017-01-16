@@ -5,6 +5,7 @@ const app = express()
 const R = require('ramda')
 const Promise = require('bluebird')
 require('express-ws')(app)
+const cookieSession = require('cookie-session')
 
 const deltaParser = require('./delta_parser')
 const db = require('./database')
@@ -13,6 +14,14 @@ const port = process.env.PORT || 3005;
 
 app.use(express.static('public'))
 
+if (!process.env.COOKIE_SECRET && process.env.NODE_ENV === 'production') {
+  console.log("COOKIE_SECRET not set! Stopping")
+  process.exit(1)
+}
+app.use(cookieSession({
+  name: 'session',
+  keys: [process.env.COOKIE_SECRET]
+}))
 
 var connectedClients = {}
 var clientId = 0

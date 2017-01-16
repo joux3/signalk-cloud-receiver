@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "bluebird": "^3.4.7",
+    "cookie-session": "^2.0.0-alpha.2",
     "express": "^4.13.4",
     "express-ws": "^2.0.0-beta",
     "nodemon": "^1.11.0",
