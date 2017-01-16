@@ -44,8 +44,8 @@ app.use(function(req, res, next) {
 app.use(express.static('public'))
 
 
-var connectedClients = {}
-var clientId = 0
+const connectedClients = {}
+let clientId = 0
 app.ws('/signalk-output', (ws, req) => {
   util.doLog('Client connected', req.ip)
   ws.__clientId = clientId++
@@ -81,7 +81,7 @@ function sendClientUpdate(pathStr, pathState) {
   })
 }
 
-var worldState = {}
+let worldState = {}
 db.getLatest30SecondsPerVessel().then(updates => {
   updates.forEach(update => {
     const globalPathStr = update.vessel + '.' + update.path
