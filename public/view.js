@@ -63,7 +63,7 @@ var selectedBoat
 var boatMarkers = {}
 var boatTrack
 function renderState(opts) {
-  var vessels = state && state.vessels
+  var vessels = state && state.vessels || {}
 
   $('#no-boat').toggle(!selectedBoat)
   $('#active-boat').toggle(!!selectedBoat)
