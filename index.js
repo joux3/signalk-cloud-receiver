@@ -13,9 +13,6 @@ const port = process.env.PORT || 3005;
 
 app.use(express.static('public'))
 
-app.get('/state', (req, res) => {
-  res.send(JSON.stringify(worldState))
-})
 
 var connectedClients = {}
 var clientId = 0
