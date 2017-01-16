@@ -112,9 +112,19 @@ app.ws('/signalk-input', (ws) => {
   ws.on('error', () => {
     util.doLog('Boat ' + (ws.__boatId || '<unknown>') + ' error');
   })
-});
+})
 
-app.listen(port)
+if (process.env.CERTIFICATE_EMAIL && process.env.CERTIFICATE_DOMAIN) {
+  require('letsencrypt-express').create({
+    server: process.env.CERTIFICATE_SERVER || 'staging',
+    email: process.env.CERTIFICATE_EMAIL,
+    agreeTos: true,
+    approveDomains: [process.env.CERTIFICATE_DOMAIN],
+    app
+  }).listen(port)
+} else {
+  app.listen(port)
+}
 util.doLog("Started listening at", port)
 
 function handleBoatMessage(boatId, ws, msg) {
