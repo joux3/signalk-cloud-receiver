@@ -2,7 +2,7 @@ const Promise = require('bluebird')
 const sqlite3 = require("sqlite3")
 const fs = require('fs')
 
-const DATABASE_FILE = 'database.sqlite'
+const DATABASE_FILE = 'data/database.sqlite'
 const IGNORE_PATHS = {
   'navigation.datetime': true
 }
