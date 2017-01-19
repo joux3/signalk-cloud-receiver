@@ -22,6 +22,8 @@ ws.on('message', (msg) => {
   const parsed = JSON.parse(msg)
   if (parsed.ACK) {
     ackedPackets++
+  } else if (parsed.ERRACK) {
+    console.log("Got ERRACK!", parsed)
   }
   if (ackedPackets >= testCount) {
     console.log("done.", testCount, "packets took", new Date() - startTime,"ms")
