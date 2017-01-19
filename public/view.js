@@ -32,7 +32,7 @@ function createConnection() {
         renderState({firstRender: true})
       } else {
         state = R.assocPath(msg.data.path.split('.'), {value: msg.data.value, timestamp: msg.data.timestamp}, state)
-        renderState({updatePath: data.path})
+        renderState({updatePath: msg.data.path})
       }
     } else if (type === 'boatTrack') {
       if (selectedBoat === msg.vesselId) {
