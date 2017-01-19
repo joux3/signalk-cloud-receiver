@@ -3,7 +3,7 @@ const fs = require('fs')
 const Promise = require('bluebird')
 const sqlite3 = require("sqlite3")
 
-const deltaParser = require('./delta_parser')
+const deltaParser = require('../delta_parser')
 
 const inputFile = process.argv[2] || (console.log('Input file needed!'), process.exit(5))
 const databaseFile = process.argv[3]
