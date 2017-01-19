@@ -30,6 +30,10 @@ app.use(cookieSession({
   keys: [process.env.COOKIE_SECRET || 'fallbackSecret']
 }))
 app.use(function(req, res, next) {
+  if (req.url === '/signalk-input/.websocket') {
+    next()
+    return
+  }
   if (req.session.loginPassword === PASSWORD) {
     next()
   } else if (req.method === 'POST' && req.body.password === PASSWORD) {
@@ -67,6 +71,23 @@ app.ws('/signalk-output', (ws, req) => {
   }
 })
 
+app.ws('/signalk-input', (ws) => {
+  ws.__boatId = Math.random();
+  util.doLog('boat ' + ws.__boatId + ' connected');
+
+  ws.on('message', msg => {
+    handleBoatMessage(ws.__boatId, ws, msg);
+  });
+
+  ws.on('close', () => {
+    util.doLog('Boat ' + (ws.__boatId || '<unknown>') + ' disconnected');
+  })
+
+  ws.on('error', () => {
+    util.doLog('Boat ' + (ws.__boatId || '<unknown>') + ' error');
+  })
+})
+
 function sendClientUpdate(pathStr, pathState) {
   const messageStr = JSON.stringify({
     type: 'state',
@@ -94,23 +115,6 @@ db.getLatest30SecondsPerVessel().then(updates => {
       timestamp: update.time.toISOString()
     }
     worldState = R.assocPath(globalPathStr.split('.'), pathState, worldState)
-  })
-})
-
-app.ws('/signalk-input', (ws) => {
-  ws.__boatId = Math.random();
-  util.doLog('boat ' + ws.__boatId + ' connected');
-
-  ws.on('message', msg => {
-    handleBoatMessage(ws.__boatId, ws, msg);
-  });
-
-  ws.on('close', () => {
-    util.doLog('Boat ' + (ws.__boatId || '<unknown>') + ' disconnected');
-  })
-
-  ws.on('error', () => {
-    util.doLog('Boat ' + (ws.__boatId || '<unknown>') + ' error');
   })
 })
 
