@@ -2,7 +2,7 @@
 
 const express = require('express')
 const app = express()
-const R = require('ramda')
+const _ = require('lodash')
 const Promise = require('bluebird')
 require('express-ws')(app)
 const cookieSession = require('cookie-session')
@@ -106,15 +106,14 @@ let worldState = {}
 db.getLatest30SecondsPerVessel().then(updates => {
   updates.forEach(update => {
     const globalPathStr = update.vessel + '.' + update.path
-    const globalPath = globalPathStr.split('.')
-    if (new Date(R.pathOr(0, globalPath.concat("timestamp"), worldState)) >= update.time) {
+    if (new Date(_.get(worldState, globalPathStr + ".timestamp", 0)) >= update.time) {
       return
     }
     const pathState = {
       value: update.value,
       timestamp: update.time.toISOString()
     }
-    worldState = R.assocPath(globalPathStr.split('.'), pathState, worldState)
+    _.set(worldState, globalPathStr, pathState)
   })
 })
 
@@ -137,15 +136,14 @@ function handleBoatMessage(boatId, ws, msg) {
   const updates = deltaParser(parsed)
   updates.forEach(update => {
     const globalPathStr = update.vessel + '.' + update.pathStr
-    const globalPath = globalPathStr.split('.')
-    if (new Date(R.pathOr(0, globalPath.concat("timestamp"), worldState)) >= update.timestamp) {
+    if (new Date(_.get(worldState, globalPathStr + ".timestamp", 0)) >= update.timestamp) {
       return
     }
     const pathState = {
       value: update.value,
       timestamp: update.timestamp.toISOString()
     }
-    worldState = R.assocPath(globalPath, pathState, worldState)
+    _.set(worldState, globalPathStr, pathState)
     sendClientUpdate(globalPathStr, pathState)
   })
 
