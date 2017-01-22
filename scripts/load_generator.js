@@ -2,7 +2,6 @@ const WebSocket = require('ws')
 
 const MAX_INFLIGHT_MESSAGES = 100
 
-
 const receiverUrl = process.argv[2] || console.log('url needed') || process.exit(1)
 const testCount = Number(process.argv[3] || console.log('count needed') || process.exit(2))
 
@@ -10,6 +9,7 @@ const ws = new WebSocket(receiverUrl)
 
 let ackedPackets = 0
 let startTime
+let sentPackets = 0
 ws.on('open', () => {
   startTime = new Date()
   console.log("connected to receiver!")
@@ -28,13 +28,12 @@ ws.on('message', (msg) => {
   if (ackedPackets >= testCount) {
     console.log("done.", testCount, "packets took", new Date() - startTime,"ms")
     process.exit(0)
-  } else {
+  } else if (sentPackets <= testCount) {
     ws.send(generatePacket())
   }
 })
 
 let currentTime = new Date().getTime() - 43200633513
-let packetId = 0
 let lastPath = 0
 function generatePacket() {
   const paths = ['navigation.speedOverGround', 'navigation.courseOverGroundTrue', 'navigation.logTrip',
@@ -68,6 +67,6 @@ function generatePacket() {
       "timestamp": new Date(currentTime++).toISOString(),
       "values": [{"path": path, "value": generator()}]
     }],
-    "context": "vessels.parrentestivene:uuuid:912419jieajfiaejia", "msgId": packetId++
+    "context": "vessels.parrentestivene:uuuid:912419jieajfiaejia", "msgId": sentPackets++
   })
 }
