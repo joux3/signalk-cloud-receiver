@@ -25,58 +25,27 @@ if (createDatabase) {
 }
 db.exec(initQuery)
 
-const createdVessels = {}
-function createVesselId(update) {
-  if (createdVessels[update.vessel]) {
-    return Promise.resolve()
-  }
-  return new Promise((resolve, reject) => {
-    db.run("INSERT OR IGNORE INTO vessels (vessel) VALUES($vessel);", {
-      $vessel: update.vessel
-    }, function(err) {
-      if (err) {
-        reject(err)
-      } else {
-        createdVessels[update.vessel] = this.lastID
-        resolve()
-      }
-    })
-  })
-}
-
-const createdPaths = {}
-function createPathId(update) {
-  if (createdPaths[update.pathStr]) {
-    return Promise.resolve()
-  }
-  return new Promise((resolve, reject) => {
-    db.run("INSERT OR IGNORE INTO paths (path) VALUES($path);", {
-      $path: update.pathStr
-    }, function(err) {
-      if (err) {
-        reject(err)
-      } else {
-        createdPaths[update.pathStr] = this.lastID
-        resolve()
-      }
-    })
-  })
-}
-
+const insertedVessels = {}
+const insertedPaths = {}
 function storeUpdate(update) {
   if (IGNORE_PATHS[update.pathStr]) {
     return Promise.resolve()
   }
-  const vesselIdPromise = createVesselId(update)
-  const pathIdPromise = createPathId(update)
-  return Promise.join(vesselIdPromise, pathIdPromise, () => {
-    return db.runAsync("INSERT INTO entries (time, vessel_id, path_id, value) VALUES " +
+  let updatePromise
+  db.serialize(() => {
+    !insertedVessels[update.vessel] && db.run("INSERT OR IGNORE INTO vessels (vessel) VALUES(?);", update.vessel)
+    !insertedPaths[update.path] && db.run("INSERT OR IGNORE INTO paths (path) VALUES(?);", update.path)
+    updatePromise = db.runAsync("INSERT INTO entries (time, vessel_id, path_id, value) VALUES " +
       "($time, (SELECT id FROM vessels WHERE vessel = $vessel), (SELECT id FROM paths WHERE path = $path), $value)", {
       $time: update.timestamp.getTime(),
       $vessel: update.vessel,
       $path: update.pathStr,
       $value: typeof update.value === 'object' ? JSON.stringify(update.value) : update.value
     })
+  })
+  return updatePromise.then(() => {
+    insertedVessels[update.vessel] = true
+    insertedPaths[update.insertedPaths] = true
   })
 }
 
