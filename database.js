@@ -25,28 +25,82 @@ if (createDatabase) {
 }
 db.exec(initQuery)
 
+let queuedUpdates = []
+let ensurePaths = {}
+let ensureVessels = {}
+let storePromise
+let databaseStorePromise
+function runUpdates() {
+  let updatePromise
+  const updates = queuedUpdates.slice(0)
+  queuedUpdates = []
+  const ensureVesselsArray = Object.keys(ensureVessels)
+  ensureVessels = {}
+  const ensurePathsArray = Object.keys(ensurePaths)
+  ensurePaths = {}
+  db.serialize(() => {
+    db.run('BEGIN TRANSACTION;')
+    ensureVesselsArray.forEach(vessel => {
+      db.run("INSERT OR IGNORE INTO vessels (vessel) VALUES(?);", vessel)
+    })
+    ensurePathsArray.forEach(path => {
+      db.run("INSERT OR IGNORE INTO paths (path) VALUES(?);", path)
+    })
+    const insertStatement = db.prepare(
+      "INSERT INTO entries (time, vessel_id, path_id, value) VALUES " +
+        "($time, (SELECT id FROM vessels WHERE vessel = $vessel), (SELECT id FROM paths WHERE path = $path), $value)"
+    )
+    updates.forEach(update => {
+      insertStatement.run({
+        $time: update.timestamp.getTime(),
+        $vessel: update.vessel,
+        $path: update.pathStr,
+        $value: typeof update.value === 'object' ? JSON.stringify(update.value) : update.value
+      })
+    })
+    insertStatement.finalize()
+    updatePromise = db.runAsync('COMMIT TRANSACTION;')
+  })
+  return updatePromise.then(() => {
+    ensureVesselsArray.forEach(vessel => {
+      insertedVessels[vessel] = true
+    })
+    ensurePathsArray.forEach(path => {
+      insertedPaths[path] = true
+    })
+  })
+}
+
 const insertedVessels = {}
 const insertedPaths = {}
 function storeUpdate(update) {
   if (IGNORE_PATHS[update.pathStr]) {
     return Promise.resolve()
   }
-  let updatePromise
-  db.serialize(() => {
-    !insertedVessels[update.vessel] && db.run("INSERT OR IGNORE INTO vessels (vessel) VALUES(?);", update.vessel)
-    !insertedPaths[update.path] && db.run("INSERT OR IGNORE INTO paths (path) VALUES(?);", update.path)
-    updatePromise = db.runAsync("INSERT INTO entries (time, vessel_id, path_id, value) VALUES " +
-      "($time, (SELECT id FROM vessels WHERE vessel = $vessel), (SELECT id FROM paths WHERE path = $path), $value)", {
-      $time: update.timestamp.getTime(),
-      $vessel: update.vessel,
-      $path: update.pathStr,
-      $value: typeof update.value === 'object' ? JSON.stringify(update.value) : update.value
-    })
-  })
-  return updatePromise.then(() => {
-    insertedVessels[update.vessel] = true
-    insertedPaths[update.insertedPaths] = true
-  })
+
+  queuedUpdates.push(update)
+  if (!insertedVessels[update.vessel]) {
+    ensureVessels[update.vessel] = true
+  }
+  if (!insertedPaths[update.path]) {
+    ensurePaths[update.pathStr] = true
+  }
+  if (storePromise) {
+    return storePromise
+  } else {
+    if (databaseStorePromise) {
+      storePromise = databaseStorePromise.then(() => {
+        storePromise = null
+        databaseStorePromise = runUpdates()
+        return databaseStorePromise
+      })
+      return storePromise
+    } else {
+      storePromise = null
+      databaseStorePromise = runUpdates()
+      return databaseStorePromise
+    }
+  }
 }
 
 function getLatest30SecondsPerVessel() {
