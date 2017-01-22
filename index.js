@@ -12,7 +12,7 @@ const deltaParser = require('./delta_parser')
 const db = require('./database')
 const util = require('./util')
 
-const port = process.env.PORT || 3005
+const port = 3005
 
 const PASSWORD = process.env.PASSWORD || 'testpw'
 if (!process.env.PASSWORD && process.env.NODE_ENV === 'production') {
@@ -124,7 +124,7 @@ if (process.env.CERTIFICATE_EMAIL && process.env.CERTIFICATE_DOMAIN) {
     agreeTos: true,
     approveDomains: [process.env.CERTIFICATE_DOMAIN],
     app
-  }).listen(port)
+  }).listen(80, 443)
 } else {
   app.listen(port)
 }
