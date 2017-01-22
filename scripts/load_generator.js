@@ -14,13 +14,13 @@ ws.on('open', () => {
   startTime = new Date()
   console.log("connected to receiver!")
   ws.send('silvio')
-  for (let i = 0; i < MAX_INFLIGHT_MESSAGES; i++) {
+  for (let i = 0; i < Math.min(MAX_INFLIGHT_MESSAGES, testCount); i++) {
     ws.send(generatePacket())
   }
 })
 ws.on('message', (msg) => {
   const parsed = JSON.parse(msg)
-  if (parsed.ACK) {
+  if (typeof parsed.ACK === 'number') {
     ackedPackets++
   } else if (parsed.ERRACK) {
     console.log("Got ERRACK!", parsed)
@@ -28,7 +28,7 @@ ws.on('message', (msg) => {
   if (ackedPackets >= testCount) {
     console.log("done.", testCount, "packets took", new Date() - startTime,"ms")
     process.exit(0)
-  } else if (sentPackets <= testCount) {
+  } else if (sentPackets < testCount) {
     ws.send(generatePacket())
   }
 })
