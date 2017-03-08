@@ -14,14 +14,14 @@
   "dependencies": {
     "bluebird": "^3.4.7",
     "body-parser": "^1.15.2",
+    "bufferutil": "^3.0.0",
     "cookie-session": "^2.0.0-alpha.2",
     "express": "^4.13.4",
-    "express-ws": "^2.0.0",
+    "express-ws": "^3.0.0",
     "letsencrypt-express": "^2.0.5",
     "lodash": "^4.17.4",
     "nodemon": "^1.11.0",
-    "sqlite3": "^3.1.8",
-    "ws": "^1.1.0"
+    "sqlite3": "^3.1.8"
   },
   "devDependencies": {
     "eslint": "^2.7.0"

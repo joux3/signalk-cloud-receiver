@@ -1,5 +1,3 @@
-const R = require('ramda')
-
 function deltaParser(deltaMessage) {
   if (!deltaMessage || !deltaMessage.updates || !deltaMessage.updates.length) {
     return []
