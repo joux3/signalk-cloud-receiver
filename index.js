@@ -1,18 +1,33 @@
 'use strict';
 
+const port = 3005
 const express = require('express')
 const app = express()
 const _ = require('lodash')
 const Promise = require('bluebird')
-require('express-ws')(app)
+const util = require('./util')
+
+let leServer = null
+if (process.env.CERTIFICATE_EMAIL && process.env.CERTIFICATE_DOMAIN) {
+  leServer = require('letsencrypt-express').create({
+    server: process.env.CERTIFICATE_SERVER || 'staging',
+    email: process.env.CERTIFICATE_EMAIL,
+    agreeTos: true,
+    approveDomains: [process.env.CERTIFICATE_DOMAIN],
+    app
+  }).listen(80, 443)
+} else {
+  app.listen(port)
+  util.doLog('Starting server at', port)
+}
+require('express-ws')(app, leServer)
+
 const cookieSession = require('cookie-session')
 const bodyParser = require('body-parser')
 
 const deltaParser = require('./delta_parser')
 const db = require('./database')
-const util = require('./util')
 
-const port = 3005
 
 const PASSWORD = process.env.PASSWORD || 'testpw'
 if (!process.env.PASSWORD && process.env.NODE_ENV === 'production') {
@@ -116,19 +131,6 @@ db.getLatest30SecondsPerVessel().then(updates => {
     _.set(worldState, globalPathStr, pathState)
   })
 })
-
-if (process.env.CERTIFICATE_EMAIL && process.env.CERTIFICATE_DOMAIN) {
-  require('letsencrypt-express').create({
-    server: process.env.CERTIFICATE_SERVER || 'staging',
-    email: process.env.CERTIFICATE_EMAIL,
-    agreeTos: true,
-    approveDomains: [process.env.CERTIFICATE_DOMAIN],
-    app
-  }).listen(80, 443)
-} else {
-  app.listen(port)
-}
-util.doLog("Started listening at", port)
 
 function handleBoatMessage(boatId, ws, msg) {
   const parsed = util.tryParseJSON(msg)
