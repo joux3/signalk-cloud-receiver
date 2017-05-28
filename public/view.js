@@ -94,10 +94,10 @@ function renderState(opts) {
 
     if (selectedBoat === vesselId) {
       var speed = R.path(['navigation', 'speedThroughWater'], vessel)
-      $("#speedThroughWater span").text(numberFormat(speed))
+      $("#speedThroughWater span").text(numberFormat(speed, 1.94384))
 
       var sog = R.path(['navigation', 'speedOverGround'], vessel)
-      $("#speedOverGround span").text(numberFormat(sog))
+      $("#speedOverGround span").text(numberFormat(sog, 1.94384))
     }
   })
   if (opts.firstRender) {
@@ -123,6 +123,6 @@ function markerClicked(vesselId) {
   ws.send(JSON.stringify({type: "requestTrack", vesselId: vesselId}))
 }
 
-function numberFormat(number) {
-  return number ? parseFloat(Math.round(number.value * 10) / 10).toFixed(1) : '-'
+function numberFormat(number, multiplier) {
+  return number ? parseFloat(Math.round(number.value * (multiplier || 1.0) * 10) / 10).toFixed(1) : '-'
 }
