@@ -7,9 +7,9 @@ const _ = require('lodash')
 const Promise = require('bluebird')
 const util = require('./util')
 
-let leServer = null
+let server = null
 if (process.env.CERTIFICATE_EMAIL && process.env.CERTIFICATE_DOMAIN) {
-  leServer = require('letsencrypt-express').create({
+  server = require('letsencrypt-express').create({
     server: process.env.CERTIFICATE_SERVER || 'staging',
     email: process.env.CERTIFICATE_EMAIL,
     agreeTos: true,
@@ -17,10 +17,10 @@ if (process.env.CERTIFICATE_EMAIL && process.env.CERTIFICATE_DOMAIN) {
     app
   }).listen(80, 443)
 } else {
-  app.listen(port)
+  server = app.listen(port)
   util.doLog('Starting server at', port)
 }
-require('express-ws')(app, leServer)
+require('express-ws')(app, server)
 
 const cookieSession = require('cookie-session')
 const bodyParser = require('body-parser')
