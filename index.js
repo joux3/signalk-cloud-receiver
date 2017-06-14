@@ -73,9 +73,17 @@ app.ws('/signalk-output', (ws, req) => {
 
   ws.on('message', function(msg) {
     const parsed = util.tryParseJSON(msg)
-    if (parsed && parsed.type === 'requestTrack' && typeof parsed.vesselId === 'string') {
-      db.getPositionsFor10Minutes(parsed.vesselId).then(positions => {
+    if (!parsed) {
+      return
+    }
+    if (parsed.type === 'requestTrack' && typeof parsed.vesselId === 'string' &&
+      (typeof parsed.date === 'string' || parsed.date === undefined)) {
+      db.getPositionsForDateOr10Minutes(parsed.vesselId, parsed.date).then(positions => {
         ws.send(JSON.stringify({type: 'boatTrack', vesselId: parsed.vesselId, positions}))
+      })
+    } else if (parsed.type === 'requestTrackDates' && typeof parsed.vesselId === 'string') {
+      db.getDatesWithPositions(parsed.vesselId).then(dates => {
+        ws.send(JSON.stringify({type: 'boatTrackDates', vesselId: parsed.vesselId, dates}))
       })
     }
   })

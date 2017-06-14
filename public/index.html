@@ -13,6 +13,7 @@
     body {
       margin: 0;
       padding: 0;
+      color: white;
     }
 
     #map {
@@ -40,7 +41,6 @@
       top: 0;
       background-color: rgba(0, 0, 0, 0.5);
       z-index: 999999;
-      color: white;
       padding: 3px;
       opacity: 0.5;
     }
@@ -55,7 +55,6 @@
       box-sizing: border-box;
       border: 1px solid rgba(255, 255, 255, 0.5);
       border-width: 1px 1px 1px 0;
-      color: white;
       text-align: center;
       line-height: 107px;
       font-size: 25px;
@@ -74,13 +73,41 @@
     }
 
     #no-boat {
-      color: white;
       line-height: 100px;
       text-align: center;
     }
     #active-boat {
       display: none;
+      position: relative;
+
     }
+    #viewTrackByDate {
+      cursor: pointer;
+      position: absolute;
+      right: 15px;
+      top: 41px;
+    }
+    #date-selector {
+      position: fixed;
+      display: none;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      background-color: black;
+      z-index: 999999;
+      border: 1px solid white;
+      padding: 5px;
+      overflow: auto;
+    }
+    #date-selector span {
+      cursor: pointer;
+      display: block;
+    }
+    #date-selector span:hover {
+      color: grey;
+    }
+
   </style>
 </head>
 <body>
@@ -100,7 +127,11 @@
       <p>SOG</p>
       <span></span>
     </div>
+    <div id="viewTrackByDate">Click to view date</div>
   </div>
+</div>
+<div id="date-selector">
+  <span id="cancel-date-selector">Cancel</span>
 </div>
 <script src="view.js"></script>
 </body>

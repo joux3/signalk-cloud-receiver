@@ -43,7 +43,18 @@ function createConnection() {
           boatTrack.remove()
         }
         boatTrack = L.polyline(latLngs, {color: 'red'}).addTo(map);
+        var latLngBounds = L.latLngBounds(latLngs)
+        if (latLngs.length !== 0) {
+          map.fitBounds(latLngBounds)
+        }
       }
+    } else if (type === 'boatTrackDates') {
+      if (selectedBoat !== msg.vesselId) {
+        return
+      }
+      $('#date-selector *:not(#cancel-date-selector)').remove()
+      msg.dates.forEach(date => $('#date-selector').append($("<span class='selectable-date'></span>").text(date)))
+      $('#date-selector').show()
     }
   }
 }
@@ -120,9 +131,24 @@ function markerClicked(vesselId) {
   }
   selectedBoat = vesselId
   renderState({})
-  ws.send(JSON.stringify({type: "requestTrack", vesselId: vesselId}))
+  sendPacket({type: "requestTrack", vesselId: vesselId})
 }
 
 function numberFormat(number, multiplier) {
   return number ? parseFloat(Math.round(number.value * (multiplier || 1.0) * 10) / 10).toFixed(1) : '-'
+}
+
+$('#viewTrackByDate').click(() => {
+  sendPacket({type: "requestTrackDates", vesselId: selectedBoat})
+})
+$('#date-selector').on('click', '#cancel-date-selector', () => {
+  $('#date-selector').hide()
+})
+$('#date-selector').on('click', '.selectable-date', function() {
+  sendPacket({type: "requestTrack", vesselId: selectedBoat, date: this.innerText})
+  $('#date-selector').hide()
+})
+
+function sendPacket(packet) {
+  ws.send(JSON.stringify(packet))
 }

@@ -122,9 +122,16 @@ function getLatest30SecondsPerVessel() {
   })
 }
 
-function getPositionsFor10Minutes(vesselId) {
+function getPositionsForDateOr10Minutes(vesselId, date) {
   const start = new Date()
-  const query = "SELECT time, value, vessel, path FROM entries\
+  const query = date
+    ? `SELECT time, value FROM entries
+      WHERE vessel_id = (SELECT id FROM vessels WHERE vessel = $vessel_id)
+      AND path_id = (SELECT id FROM paths WHERE path = 'navigation.position')
+      AND time >= strftime('%s', $date) * 1000
+      AND time <= (strftime('%s', $date) + 24 * 60 * 60) * 1000
+      ORDER BY time DESC`
+    : "SELECT time, value, vessel, path FROM entries\
     INNER JOIN (\
       SELECT vessel_id, max(time) AS max_time FROM entries\
       INNER JOIN paths ON paths.id = entries.path_id\
@@ -137,11 +144,29 @@ function getPositionsFor10Minutes(vesselId) {
     WHERE paths.path = 'navigation.position'\
     ORDER BY time DESC"
   return db.allAsync(query, {
+    $vessel_id: 'vessels.' + vesselId,
+    $date: date
+  }).then(rows => {
+    const startParsing = new Date()
+    rows.forEach(parseDbRow)
+    util.doLog(date ? "getPositionsForDate" : "getPositionsFor10Minutes", "took", new Date() - start, "ms, parsing took",
+      new Date() - startParsing, "ms")
+    return rows
+  })
+}
+
+function getDatesWithPositions(vesselId) {
+  const start = new Date()
+  const query = `SELECT DISTINCT DATE(time / 1000, 'unixepoch') AS date
+  FROM entries WHERE
+  vessel_id = (SELECT id FROM vessels WHERE vessel = $vessel_id)
+  AND path_id = (SELECT id FROM paths WHERE path = 'navigation.position')
+  ORDER BY time DESC`
+  return db.allAsync(query, {
     $vessel_id: 'vessels.' + vesselId
   }).then(rows => {
-    util.doLog("getPositionsFor10Minutes took", new Date() - start, "ms")
-    rows.forEach(parseDbRow)
-    return rows
+    util.doLog("getDatesWithPositions took", new Date() - start, "ms")
+    return rows.map(row => row.date)
   })
 }
 
@@ -159,6 +184,7 @@ function parseDbRow(row) {
 module.exports = {
   storeUpdate,
   getLatest30SecondsPerVessel,
-  getPositionsFor10Minutes
+  getPositionsForDateOr10Minutes,
+  getDatesWithPositions
 }
 
