@@ -188,7 +188,6 @@ function getDisplayNames() {
   return db.allAsync(query).then(rows => {
     const displayNames = {}
     rows.forEach(row => {
-      console.log('name len', row.display_name.length)
       if (row.display_name.length > 0) {
         displayNames[row.vessel.replace(/^vessels\./, '')] = row.display_name
       }
