@@ -17,7 +17,7 @@ let initQuery = 'PRAGMA journal_mode=WAL;'
 initQuery += 'PRAGMA foreign_keys = ON;'
 
 if (createDatabase) {
-  initQuery += 'CREATE TABLE vessels (id INTEGER PRIMARY KEY, vessel TEXT UNIQUE);'
+  initQuery += "CREATE TABLE vessels (id INTEGER PRIMARY KEY, vessel TEXT UNIQUE, display_name TEXT DEFAULT '');"
   initQuery += 'CREATE TABLE paths (id INTEGER PRIMARY KEY, path TEXT UNIQUE);'
   initQuery += 'CREATE TABLE entries (time INTEGER, vessel_id INTEGER NOT NULL, path_id INTEGER NOT NULL, value TEXT, ' +
     'FOREIGN KEY(vessel_id) REFERENCES vessels(id), FOREIGN KEY(path_id) REFERENCES paths(id));'
@@ -181,10 +181,27 @@ function parseDbRow(row) {
   }
 }
 
+function getDisplayNames() {
+  const query = `
+    SELECT vessel, display_name FROM vessels
+  `
+  return db.allAsync(query).then(rows => {
+    const displayNames = {}
+    rows.forEach(row => {
+      console.log('name len', row.display_name.length)
+      if (row.display_name.length > 0) {
+        displayNames[row.vessel.replace(/^vessels\./, '')] = row.display_name
+      }
+    })
+    return displayNames
+  })
+}
+
 module.exports = {
   storeUpdate,
   getLatest30SecondsPerVessel,
   getPositionsForDateOr10Minutes,
-  getDatesWithPositions
+  getDatesWithPositions,
+  getDisplayNames
 }
 

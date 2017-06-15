@@ -69,6 +69,7 @@ app.ws('/signalk-output', (ws, req) => {
   util.doLog('Client connected', req.ip)
   ws.__clientId = clientId++
   connectedClients[ws.__clientId] = ws
+  ws.send(JSON.stringify({type: 'displayNames', displayNames}))
   ws.send(JSON.stringify({type: 'state', data: worldState}))
 
   ws.on('message', function(msg) {
@@ -125,6 +126,14 @@ function sendClientUpdate(pathStr, pathState) {
   })
 }
 
+let displayNames = {}
+updateDisplayNames()
+setInterval(updateDisplayNames, 60 * 1000 * 5)
+function updateDisplayNames() {
+  db.getDisplayNames().then(_displayNames => {
+    displayNames = _displayNames
+  })
+}
 let worldState = {}
 db.getLatest30SecondsPerVessel().then(updates => {
   updates.forEach(update => {

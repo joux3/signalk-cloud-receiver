@@ -9,6 +9,7 @@ createConnection()
 
 var state = {}
 var ws
+var displayNames = {}
 function createConnection() {
   ws = new WebSocket(window.location.protocol.replace('http', 'ws') + "//" + window.location.host + "/signalk-output")
   connStatus("Connecting") 
@@ -55,6 +56,8 @@ function createConnection() {
       $('#date-selector *:not(#cancel-date-selector)').remove()
       msg.dates.forEach(date => $('#date-selector').append($("<span class='selectable-date'></span>").text(date)))
       $('#date-selector').show()
+    } else if (type === 'displayNames') {
+      displayNames = msg.displayNames
     }
   }
 }
@@ -91,7 +94,7 @@ function renderState(opts) {
         boatMarker.on('click', function() {
           markerClicked(vesselId)
         })
-        boatMarker.bindTooltip(vesselId)
+        boatMarker.bindTooltip(displayNames[vesselId] || vesselId)
         boatMarkers[vesselId] = boatMarker
       }
     }
