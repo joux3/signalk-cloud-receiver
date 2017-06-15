@@ -44,10 +44,7 @@ function createConnection() {
           boatTrack.remove()
         }
         boatTrack = L.polyline(latLngs, {color: 'red'}).addTo(map);
-        var latLngBounds = L.latLngBounds(latLngs)
-        if (latLngs.length !== 0) {
-          map.fitBounds(latLngBounds)
-        }
+        showBoundsIfNeeded(latLngs, true)
       }
     } else if (type === 'boatTrackDates') {
       if (selectedBoat !== msg.vesselId) {
@@ -118,11 +115,10 @@ function renderState(opts) {
     var points = Object.keys(boatMarkers).map(function(vesselId) {
       return boatMarkers[vesselId].getLatLng()
     })
-    var latLngBounds = L.latLngBounds(points)
     if (points.length == 0) {
       map.setView([60.148665, 24.949106], 14);
     } else {
-      map.fitBounds(latLngBounds)
+      showBoundsIfNeeded(points)
     }
   }
 }
@@ -154,4 +150,17 @@ $('#date-selector').on('click', '.selectable-date', function() {
 
 function sendPacket(packet) {
   ws.send(JSON.stringify(packet))
+}
+
+function showBoundsIfNeeded(latLngs, checkCurrentView) {
+  var latLngBounds = L.latLngBounds(latLngs)
+  if (latLngBounds.length === 0) {
+    return
+  }
+  if (checkCurrentView && map.getBounds().contains(latLngBounds)) {
+    return
+  }
+  map.fitBounds(latLngBounds, {
+    maxZoom: 14
+  })
 }
