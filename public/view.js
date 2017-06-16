@@ -161,6 +161,7 @@ function showBoundsIfNeeded(latLngs, checkCurrentView) {
     return
   }
   map.fitBounds(latLngBounds, {
-    maxZoom: 14
+    maxZoom: 14,
+    padding: [10, 10]
   })
 }
