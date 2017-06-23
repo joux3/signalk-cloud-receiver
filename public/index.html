@@ -40,7 +40,7 @@
       right: 0;
       top: 0;
       background-color: rgba(0, 0, 0, 0.5);
-      z-index: 999999;
+      z-index: 29999999;
       padding: 3px;
       opacity: 0.5;
     }
@@ -108,6 +108,41 @@
       color: grey;
     }
 
+    #track-timeline {
+      position: fixed;
+      height: 100px;
+      background-color: black;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999999;
+      transition: transform 0.5s;
+      transform: translateY(100px);
+    }
+    #track-timeline.show {
+      transform: translateY(0);
+    }
+    #close-track-timeline {
+      position: absolute;
+      display: flex;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      padding-right: 40px;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    #load-in-progress-layer {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: black;
+      opacity: 0.4;
+      z-index: 19999999;
+    }
   </style>
 </head>
 <body>
@@ -133,6 +168,12 @@
 <div id="date-selector">
   <span id="cancel-date-selector">Cancel</span>
 </div>
+<div id="track-timeline">
+  <span id="close-track-timeline">Close</span>
+</div>
+<div id="load-in-progress-layer">
+</div>
+<script src="timeline.js"></script>
 <script src="view.js"></script>
 </body>
 </html>
