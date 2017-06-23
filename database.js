@@ -130,7 +130,7 @@ function getPositionsForDateOr10Minutes(vesselId, date) {
       AND path_id = (SELECT id FROM paths WHERE path = 'navigation.position')
       AND time >= strftime('%s', $date) * 1000
       AND time <= (strftime('%s', $date) + 24 * 60 * 60) * 1000
-      ORDER BY time DESC`
+      ORDER BY time ASC`
     : "SELECT time, value, vessel, path FROM entries\
     INNER JOIN (\
       SELECT vessel_id, max(time) AS max_time FROM entries\
