@@ -32,10 +32,11 @@
     var graphWidth = $('#timeline-graph').get(0).offsetWidth
     var graphHeight = 100
     const leftPadding = 40
+    const rightPadding = 15
 
     var x = d3.scaleTime()
       .domain([positions[0].time, positions[positions.length - 1].time])
-      .range([0, graphWidth - leftPadding])
+      .range([0, graphWidth - leftPadding - rightPadding])
 
     speeds.forEach(sample => {
       sample.value = sample.value * 1.94384
@@ -83,7 +84,7 @@
 
     var locationCircle = L.circle([0, 0], {weight: 10})
     $('#timeline-graph svg').on('mousemove', function(ev) {
-      if (ev.clientX < leftPadding) {
+      if (ev.clientX < leftPadding || ev.clientX > graphWidth - rightPadding) {
         mouseOut()
         return
       }
