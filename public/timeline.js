@@ -32,10 +32,11 @@
       .domain([trackData[0].time, trackData[trackData.length - 1].time])
       .range([0, graphWidth - 20])
 
+    const timeFormat = d3.timeFormat('%H:%M')
     var xAxis = d3.axisBottom()
       .scale(x)
       .tickSize(6, 0)
-      .tickFormat(d3.timeFormat('%H:%M'))
+      .tickFormat(timeFormat)
 
     var svg = d3.select('#timeline-graph').append('svg')
       .attr('width', graphWidth)
@@ -46,6 +47,7 @@
       .attr('transform', 'translate(10,75)')
       .call(xAxis)
 
+    var locationCircle = L.circle([0, 0], {weight: 10})
     $('#timeline-graph svg').on('mousemove', function(ev) {
       if (ev.clientX < 10 || ev.clientX > graphWidth - 10) {
         mouseOut()
@@ -54,10 +56,15 @@
       var onGraphX = ev.clientX - 10
       const time = x.invert(onGraphX)
       const sampleIndex = d3.bisectLeft(timeSamples, time)
-      console.log(sampleIndex)
+      const sample = trackData[sampleIndex]
+      locationCircle.setLatLng([sample.value.latitude, sample.value.longitude])
+      locationCircle.bindTooltip(timeFormat(time))
+      locationCircle.openTooltip()
+      timelineLayerGroup.addLayer(locationCircle)
     })
     $('#timeline-graph svg').on('mouseout', mouseOut)
     function mouseOut() {
+      timelineLayerGroup.removeLayer(locationCircle)
     }
   }
 
