@@ -127,7 +127,7 @@ function getPositionsForDateOr10Minutes(vesselId, date) {
   const query = date
     ? `SELECT time, value FROM entries
       WHERE vessel_id = (SELECT id FROM vessels WHERE vessel = $vessel_id)
-      AND path_id = (SELECT id FROM paths WHERE path = 'navigation.position')
+      AND path_id IN (SELECT id FROM paths WHERE path = 'navigation.position' OR path = 'navigation.speedOverGround')
       AND time >= strftime('%s', $date) * 1000
       AND time <= (strftime('%s', $date) + 24 * 60 * 60) * 1000
       ORDER BY time ASC`

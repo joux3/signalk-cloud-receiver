@@ -14,6 +14,10 @@ function showBoundsIfNeeded(latLngs, checkCurrentView) {
   })
 }
 
+function numberFormat(number, multiplier) {
+  return number ? parseFloat(Math.round(number.value * (multiplier || 1.0) * 10) / 10).toFixed(1) : '-'
+}
+
 (function () {
 
   L.tileLayer(window.location.protocol + '//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -164,10 +168,6 @@ function showBoundsIfNeeded(latLngs, checkCurrentView) {
     selectedBoat = vesselId
     renderState({})
     sendPacket({type: "requestTrack", vesselId: vesselId})
-  }
-
-  function numberFormat(number, multiplier) {
-    return number ? parseFloat(Math.round(number.value * (multiplier || 1.0) * 10) / 10).toFixed(1) : '-'
   }
 
   $('#viewTrackByDate').click(() => {

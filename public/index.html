@@ -146,8 +146,12 @@
       z-index: 19999999;
     }
 
+    .axis, .speed {
+      pointer-events: none;
+    }
     .axis text {
       font: 10px sans-serif;
+      fill: white;
     }
     .axis line,
     .axis path {
@@ -155,9 +159,11 @@
       stroke: white;
       shape-rendering: crispEdges;
     }
-    .axis text {
-      fill: white;
+
+    .speed path {
+      stroke: white;
     }
+
   </style>
 </head>
 <body>

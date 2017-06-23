@@ -7,8 +7,14 @@
     timelineLayerGroup = L.layerGroup([])
     timelineLayerGroup.addTo(map)
 
-    createGraph(trackData)
-    var latLngs = trackData.map(function(position) {
+    trackData.forEach(sample => {
+      sample.time = new Date(sample.time)
+    })
+
+    const positions = trackData.filter(sample => typeof sample.value.latitude === 'number')
+    const speeds = trackData.filter(sample => typeof sample.value === 'number')
+    createGraph(positions, speeds)
+    var latLngs = positions.map(function(position) {
       return [position.value.latitude, position.value.longitude]
     })
     var dateTrack = L.polyline(latLngs, {color: 'red'})
@@ -19,18 +25,24 @@
     $('#track-timeline').addClass('show')
   }
 
-  function createGraph(trackData) {
-    trackData.forEach(sample => {
-      sample.time = new Date(sample.time)
-    })
-    var timeSamples = trackData.map(sample => sample.time)
+  function createGraph(positions, speeds) {
+    var timeSamples = positions.map(sample => sample.time)
+    var speedTimes = speeds.map(sample => sample.time)
 
     var graphWidth = $('#timeline-graph').get(0).offsetWidth
     var graphHeight = 100
+    const leftPadding = 40
 
     var x = d3.scaleTime()
-      .domain([trackData[0].time, trackData[trackData.length - 1].time])
-      .range([0, graphWidth - 20])
+      .domain([positions[0].time, positions[positions.length - 1].time])
+      .range([0, graphWidth - leftPadding])
+
+    speeds.forEach(sample => {
+      sample.value = sample.value * 1.94384
+    })
+    var y = d3.scaleLinear()
+      .domain([d3.max(speeds, sample => sample.value), 0])
+      .range([0, graphHeight - 25 - 10])
 
     const timeFormat = d3.timeFormat('%H:%M')
     var xAxis = d3.axisBottom()
@@ -38,27 +50,55 @@
       .tickSize(6, 0)
       .tickFormat(timeFormat)
 
+    var yAxis = d3.axisLeft()
+      .scale(y)
+      .tickSize(6, 0)
+      .ticks(4)
+
+    var speedLine = d3.line()
+      .x(speedSample => x(speedSample.time))
+      .y(speedSample => y(speedSample.value))
+
     var svg = d3.select('#timeline-graph').append('svg')
       .attr('width', graphWidth)
       .attr('height', graphHeight)
 
-    var g = svg.append('g')
+    var gAxis = svg.append('g')
       .attr('class', 'axis')
-      .attr('transform', 'translate(10,75)')
+      .attr('transform', 'translate('+(leftPadding)+',75)')
       .call(xAxis)
+
+    var gAxis2 = svg.append('g')
+      .attr('class', 'axis')
+      .attr('transform', 'translate('+(leftPadding - 1)+',10)')
+      .call(yAxis)
+
+
+    var gSpeed = svg.append('g')
+      .attr('class', 'speed')
+      .attr('transform', 'translate(' + leftPadding + ', 10)')
+
+    gSpeed.append('path')
+      .attr('d', speedLine(speeds))
 
     var locationCircle = L.circle([0, 0], {weight: 10})
     $('#timeline-graph svg').on('mousemove', function(ev) {
-      if (ev.clientX < 10 || ev.clientX > graphWidth - 10) {
+      if (ev.clientX < leftPadding) {
         mouseOut()
         return
       }
-      var onGraphX = ev.clientX - 10
+      var onGraphX = ev.clientX - leftPadding
       const time = x.invert(onGraphX)
-      const sampleIndex = d3.bisectLeft(timeSamples, time)
-      const sample = trackData[sampleIndex]
-      locationCircle.setLatLng([sample.value.latitude, sample.value.longitude])
-      locationCircle.bindTooltip(timeFormat(time))
+      const posSampleIndex = d3.bisectLeft(timeSamples, time)
+      const posSample = positions[posSampleIndex]
+      const speedSampleIndex = d3.bisectLeft(speedTimes, time)
+      const speedSample = speeds[speedSampleIndex]
+      locationCircle.setLatLng([posSample.value.latitude, posSample.value.longitude])
+      let tooltip = timeFormat(time)
+      if (speedSample) {
+        tooltip += ', SOG ' + numberFormat(speedSample)
+      }
+      locationCircle.bindTooltip(tooltip)
       locationCircle.openTooltip()
       timelineLayerGroup.addLayer(locationCircle)
     })
