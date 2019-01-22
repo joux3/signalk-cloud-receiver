@@ -19,6 +19,7 @@
     "express": "^4.13.4",
     "express-ws": "^3.0.0",
     "greenlock-express": "^2.6.7",
+    "le-acme-core": "^2.1.4",
     "lodash": "^4.17.4",
     "nodemon": "^1.11.0",
     "sqlite3": "^3.1.8"
