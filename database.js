@@ -1,5 +1,5 @@
 const Promise = require('bluebird')
-const sqlite3 = require("sqlite3")
+const sqlite3 = require('sqlite3')
 const fs = require('fs')
 
 const util = require('./util')
@@ -17,11 +17,14 @@ let initQuery = 'PRAGMA journal_mode=WAL;'
 initQuery += 'PRAGMA foreign_keys = ON;'
 
 if (createDatabase) {
-  initQuery += "CREATE TABLE vessels (id INTEGER PRIMARY KEY, vessel TEXT UNIQUE, display_name TEXT DEFAULT '');"
+  initQuery +=
+    "CREATE TABLE vessels (id INTEGER PRIMARY KEY, vessel TEXT UNIQUE, display_name TEXT DEFAULT '');"
   initQuery += 'CREATE TABLE paths (id INTEGER PRIMARY KEY, path TEXT UNIQUE);'
-  initQuery += 'CREATE TABLE entries (time INTEGER, vessel_id INTEGER NOT NULL, path_id INTEGER NOT NULL, value TEXT, ' +
+  initQuery +=
+    'CREATE TABLE entries (time INTEGER, vessel_id INTEGER NOT NULL, path_id INTEGER NOT NULL, value TEXT, ' +
     'FOREIGN KEY(vessel_id) REFERENCES vessels(id), FOREIGN KEY(path_id) REFERENCES paths(id));'
-  initQuery += 'CREATE INDEX vessel_path_time ON entries (vessel_id, path_id, time);'
+  initQuery +=
+    'CREATE INDEX vessel_path_time ON entries (vessel_id, path_id, time);'
 }
 db.exec(initQuery)
 
@@ -41,21 +44,24 @@ function runUpdates() {
   db.serialize(() => {
     db.run('BEGIN TRANSACTION;')
     ensureVesselsArray.forEach(vessel => {
-      db.run("INSERT OR IGNORE INTO vessels (vessel) VALUES(?);", vessel)
+      db.run('INSERT OR IGNORE INTO vessels (vessel) VALUES(?);', vessel)
     })
     ensurePathsArray.forEach(path => {
-      db.run("INSERT OR IGNORE INTO paths (path) VALUES(?);", path)
+      db.run('INSERT OR IGNORE INTO paths (path) VALUES(?);', path)
     })
     const insertStatement = db.prepare(
-      "INSERT INTO entries (time, vessel_id, path_id, value) VALUES " +
-        "($time, (SELECT id FROM vessels WHERE vessel = $vessel), (SELECT id FROM paths WHERE path = $path), $value)"
+      'INSERT INTO entries (time, vessel_id, path_id, value) VALUES ' +
+        '($time, (SELECT id FROM vessels WHERE vessel = $vessel), (SELECT id FROM paths WHERE path = $path), $value)'
     )
     updates.forEach(update => {
       insertStatement.run({
         $time: update.timestamp.getTime(),
         $vessel: update.vessel,
         $path: update.pathStr,
-        $value: typeof update.value === 'object' ? JSON.stringify(update.value) : update.value
+        $value:
+          typeof update.value === 'object'
+            ? JSON.stringify(update.value)
+            : update.value
       })
     })
     insertStatement.finalize()
@@ -105,7 +111,8 @@ function storeUpdate(update) {
 
 function getLatest30SecondsPerVessel() {
   const start = new Date()
-  const query = "SELECT time, value, vessel, path FROM entries\
+  const query =
+    "SELECT time, value, vessel, path FROM entries\
     INNER JOIN (\
       SELECT vessel_id, MAX(time) AS max_time FROM entries\
       INNER JOIN paths ON paths.id = entries.path_id\
@@ -116,7 +123,7 @@ function getLatest30SecondsPerVessel() {
     INNER JOIN vessels ON vessels.id = entries.vessel_id\
     INNER JOIN paths ON paths.id = entries.path_id"
   return db.allAsync(query).then(rows => {
-    util.doLog("getLatest30SecondsPerVessel took", new Date() - start, "ms")
+    util.doLog('getLatest30SecondsPerVessel took', new Date() - start, 'ms')
     rows.forEach(parseDbRow)
     return rows
   })
@@ -143,31 +150,45 @@ function getPositionsForDateOr10Minutes(vesselId, date) {
     INNER JOIN paths ON paths.id = entries.path_id\
     WHERE paths.path = 'navigation.position'\
     ORDER BY time DESC"
-  return db.allAsync(query, {
-    $vessel_id: 'vessels.' + vesselId,
-    $date: date
-  }).then(rows => {
-    const startParsing = new Date()
-    rows.forEach(parseDbRow)
-    util.doLog(date ? "getPositionsForDate" : "getPositionsFor10Minutes", "took", new Date() - start, "ms, parsing took",
-      new Date() - startParsing, "ms")
-    return rows
-  })
+  return db
+    .allAsync(query, {
+      $vessel_id: 'vessels.' + vesselId,
+      $date: date
+    })
+    .then(rows => {
+      const startParsing = new Date()
+      rows.forEach(parseDbRow)
+      util.doLog(
+        date ? 'getPositionsForDate' : 'getPositionsFor10Minutes',
+        'took',
+        new Date() - start,
+        'ms, parsing took',
+        new Date() - startParsing,
+        'ms'
+      )
+      return rows
+    })
 }
 
 function getDatesWithPositions(vesselId) {
   const start = new Date()
-  const query = `SELECT DISTINCT DATE(time / 1000, 'unixepoch') AS date
-  FROM entries WHERE
-  vessel_id = (SELECT id FROM vessels WHERE vessel = $vessel_id)
-  AND path_id = (SELECT id FROM paths WHERE path = 'navigation.position')
-  ORDER BY time DESC`
-  return db.allAsync(query, {
-    $vessel_id: 'vessels.' + vesselId
-  }).then(rows => {
-    util.doLog("getDatesWithPositions took", new Date() - start, "ms")
-    return rows.map(row => row.date)
-  })
+  const query = `
+  SELECT DISTINCT DATE(hour * 3600, 'unixepoch') AS date FROM (
+    SELECT DISTINCT time / 3600000 AS hour
+    FROM entries WHERE
+    vessel_id = (SELECT id FROM vessels WHERE vessel = $vessel_id)
+    AND path_id = (SELECT id FROM paths WHERE path = 'navigation.position')
+    ORDER BY time DESC
+  )
+  `
+  return db
+    .allAsync(query, {
+      $vessel_id: 'vessels.' + vesselId
+    })
+    .then(rows => {
+      util.doLog('getDatesWithPositions took', new Date() - start, 'ms')
+      return rows.map(row => row.date)
+    })
 }
 
 function parseDbRow(row) {
@@ -203,4 +224,3 @@ module.exports = {
   getDatesWithPositions,
   getDisplayNames
 }
-
